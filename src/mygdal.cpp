@@ -1,4 +1,6 @@
 #include "mygdal.h"
+#include "SpiceUsr.h"
+
 
 bool WriteImageData(const char* strDestFilePath,unsigned char* pImageData,int nWidth,int nHeight,int nChannels,int nNewChannels)
 {
@@ -76,33 +78,33 @@ bool WriteImageData(const char* strDestFilePath,unsigned char* pImageData,int nW
 	return true;
 }
 
-//³£¹æ²Ù×÷
+//å¸¸è§„æ“ä½œ
 void jichu(){
-	//×¢²áÎÄ¼ş¸ñÊ½
+	//æ³¨å†Œæ–‡ä»¶æ ¼å¼
 	GDALAllRegister();
 
 	const char* pszFile = "E:\\Mars_VS\\Mars_MGS_MOLA_DEM_mosaic_global_463m.tif";
 	GDALDataset *poDataset;
-	//Ê¹ÓÃÖ»¶Á·½Ê½´ò¿ªÍ¼Ïñ
+	//ä½¿ç”¨åªè¯»æ–¹å¼æ‰“å¼€å›¾åƒ
 	poDataset = (GDALDataset*) GDALOpen( pszFile,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File: %s²»ÄÜ´ò¿ª£¡\n",pszFile);
+		printf( "File: %sä¸èƒ½æ‰“å¼€ï¼\n",pszFile);
 		return;
 	}
 
-	//Êä³öÍ¼ÏñµÄ¸ñÊ½ĞÅÏ¢
+	//è¾“å‡ºå›¾åƒçš„æ ¼å¼ä¿¡æ¯
 
 	printf( "Driver:%s/%s\n",
 		poDataset->GetDriver()->GetDescription(),
 		poDataset->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME) );
 
-	//Êä³öÍ¼ÏñµÄ´óĞ¡ºÍ²¨¶Î¸öÊı
+	//è¾“å‡ºå›¾åƒçš„å¤§å°å’Œæ³¢æ®µä¸ªæ•°
 	printf( "Size is%dx%dx%d\n",
 		poDataset->GetRasterXSize(),poDataset->GetRasterYSize(),
 		poDataset->GetRasterCount());
 
-	//Êä³öÍ¼ÏñµÄÍ¶Ó°ĞÅÏ¢
+	//è¾“å‡ºå›¾åƒçš„æŠ•å½±ä¿¡æ¯
 	if( poDataset->GetProjectionRef() != NULL )
 		printf( "Projectionis `%s'\n", poDataset->GetProjectionRef() );
 
@@ -112,27 +114,27 @@ void jichu(){
 	OGRSpatialReference fRef;
 	char *tmp = NULL;
 	const char *projRef =poDataset->GetProjectionRef();
-	/** »ñµÃprojRefµÄÒ»·İ¿½±´ **/
-	/** ÓÉÓÚprojRefÊÇconst char*,ÏÂÃæµÄÒ»¸öº¯Êı²»½ÓÊÜ£¬ËùÒÔĞèÒª×ª»»³É·Çconst **/
+	/** è·å¾—projRefçš„ä¸€ä»½æ‹·è´ **/
+	/** ç”±äºprojRefæ˜¯const char*,ä¸‹é¢çš„ä¸€ä¸ªå‡½æ•°ä¸æ¥å—ï¼Œæ‰€ä»¥éœ€è¦è½¬æ¢æˆéconst **/
 	tmp = (char *)malloc(strlen(projRef) + 1);
-	strcpy_s(tmp, strlen(projRef)+1, projRef);
+	strcpy(tmp, projRef);
 
 
-	/** ÉèÖÃÔ­Ê¼µÄ×ø±ê²ÎÊı£¬ºÍtest.tifÒ»ÖÂ **/
+	/** è®¾ç½®åŸå§‹çš„åæ ‡å‚æ•°ï¼Œå’Œtest.tifä¸€è‡´ **/
 	fRef.importFromWkt(&tmp);
-	/** ÉèÖÃ×ª»»ºóµÄ×ø±ê **/
+	/** è®¾ç½®è½¬æ¢åçš„åæ ‡ **/
 	OGRSpatialReference *tRef;
-	tRef=fRef.CloneGeogCS();  //Ö»¸´ÖÆ³öµØÀí×ø±êÄÇ²¿·Ö
+	tRef=fRef.CloneGeogCS();  //åªå¤åˆ¶å‡ºåœ°ç†åæ ‡é‚£éƒ¨åˆ†
 	//tRef->SetWellKnownGeogCS("WGS84");
 
-	/** ÏÂÃæ½øĞĞ×ø±ê×ª»»£¬µ½´ËÎªÖ¹¶¼²»ĞèÒªproj£¬µ«ÊÇÏÂÃæµÄÄÚÈİÈç¹û²»°²×°proj½«»áÎŞ·¨±àÒë **/
+	/** ä¸‹é¢è¿›è¡Œåæ ‡è½¬æ¢ï¼Œåˆ°æ­¤ä¸ºæ­¢éƒ½ä¸éœ€è¦projï¼Œä½†æ˜¯ä¸‹é¢çš„å†…å®¹å¦‚æœä¸å®‰è£…projå°†ä¼šæ— æ³•ç¼–è¯‘ **/
 	double x=916925.21;double y=9502679.47;double z=1000;
 	OGRCoordinateTransformation *coordTrans;
 	coordTrans = OGRCreateCoordinateTransformation(&fRef, tRef);
 	coordTrans->Transform(1, &x, &y, &z);
 	printf("lat:%lf lon:%lf H:%lf\n",x,y,z);
 
-	//Êä³öÍ¼ÏñµÄ×ø±êºÍ·Ö±æÂÊĞÅÏ¢
+	//è¾“å‡ºå›¾åƒçš„åæ ‡å’Œåˆ†è¾¨ç‡ä¿¡æ¯
 	double adfGeoTransform[6];
 	if( poDataset->GetGeoTransform(adfGeoTransform) == CE_None )
 	{
@@ -148,10 +150,10 @@ void jichu(){
 	int            bGotMin, bGotMax;
 	double         adfMinMax[2];
 
-	//¶ÁÈ¡µÚÒ»¸ö²¨¶Î
+	//è¯»å–ç¬¬ä¸€ä¸ªæ³¢æ®µ
 	poBand = poDataset->GetRasterBand( 1 );
 
-	//»ñÈ¡Í¼ÏñµÄ¿é´óĞ¡²¢Êä³ö
+	//è·å–å›¾åƒçš„å—å¤§å°å¹¶è¾“å‡º
 	poBand->GetBlockSize(&nBlockXSize, &nBlockYSize );
 	printf( "Block=%dx%dType=%s, ColorInterp=%s\n",
 		nBlockXSize, nBlockYSize,
@@ -159,7 +161,7 @@ void jichu(){
 		GDALGetColorInterpretationName(
 		poBand->GetColorInterpretation()));
 
-	//»ñÈ¡¸Ã²¨¶ÎµÄ×î´óÖµ×îĞ¡Öµ£¬Èç¹û»ñÈ¡Ê§°Ü£¬Ôò½øĞĞÍ³¼Æ
+	//è·å–è¯¥æ³¢æ®µçš„æœ€å¤§å€¼æœ€å°å€¼ï¼Œå¦‚æœè·å–å¤±è´¥ï¼Œåˆ™è¿›è¡Œç»Ÿè®¡
 	adfMinMax[0] = poBand->GetMinimum( &bGotMin);
 	adfMinMax[1] = poBand->GetMaximum( &bGotMax);
 
@@ -168,11 +170,11 @@ void jichu(){
 
 	printf( "Min=%.3fd,Max=%.3f\n", adfMinMax[0], adfMinMax[1] );
 
-	//Êä³öÍ¼ÏñµÄ½ğ×ÖËşĞÅÏ¢
+	//è¾“å‡ºå›¾åƒçš„é‡‘å­—å¡”ä¿¡æ¯
 	if( poBand->GetOverviewCount() > 0 )
 		printf( "Band has%d overviews.\n", poBand->GetOverviewCount() );
 
-	//Êä³öÍ¼ÏñµÄÑÕÉ«±íĞÅÏ¢
+	//è¾“å‡ºå›¾åƒçš„é¢œè‰²è¡¨ä¿¡æ¯
 	if( poBand->GetColorTable() != NULL)
 		printf( "Band hasa color table with %d entries.\n",
 		poBand->GetColorTable()->GetColorEntryCount() );
@@ -180,7 +182,7 @@ void jichu(){
 	float *pafScanline;
 	int   nXSize = poBand->GetXSize();
 
-	//¶ÁÈ¡Í¼ÏñµÄµÚÒ»ĞĞÊı¾İ
+	//è¯»å–å›¾åƒçš„ç¬¬ä¸€è¡Œæ•°æ®
 	pafScanline = (float*) CPLMalloc(sizeof(float)*nXSize);
 	poBand->RasterIO(GF_Read, 0, 0, nXSize,1, 
 		pafScanline, nXSize,1, GDT_Float32, 0, 0 );//GDT_Float32
@@ -190,9 +192,9 @@ void jichu(){
 
 
 
-	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //Í¼ÏñÇı¶¯
+	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //å›¾åƒé©±åŠ¨
 	char** ppszOptions = NULL;
-	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //ÅäÖÃÍ¼ÏñĞÅÏ¢
+	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //é…ç½®å›¾åƒä¿¡æ¯
 	const char* dstPath = "D:\\dst.tif";
 	int bufWidth = 200;
 	int bufHeight = 500;
@@ -204,20 +206,20 @@ void jichu(){
 	}
 
 
-	CPLFree(pafScanline);//¼ÇµÃÒªÊÍ·Å¿Õ¼ä
+	CPLFree(pafScanline);//è®°å¾—è¦é‡Šæ”¾ç©ºé—´
 
-	//¹Ø±ÕÎÄ¼ş
+	//å…³é—­æ–‡ä»¶
 	GDALClose((GDALDatasetH)poDataset);
 }
 
-//2%À­Éì
+//2%æ‹‰ä¼¸
 void Linear2(char* pszSrcFile, char* pszDstFile){
 
-	GDALDataset *dataSet = (GDALDataset*)GDALOpen(pszSrcFile,GA_ReadOnly);//ÊäÈëÎÄ¼şÂ·¾¶×Ô¼º¸Ä
+	GDALDataset *dataSet = (GDALDataset*)GDALOpen(pszSrcFile,GA_ReadOnly);//è¾“å…¥æ–‡ä»¶è·¯å¾„è‡ªå·±æ”¹
 
 	if( dataSet == NULL )
 	{
-		printf( "File: %s²»ÄÜ´ò¿ª£¡\n",pszSrcFile);
+		printf( "File: %sä¸èƒ½æ‰“å¼€ï¼\n",pszSrcFile);
 		return;
 	}
 
@@ -226,20 +228,20 @@ void Linear2(char* pszSrcFile, char* pszDstFile){
 	int channels = dataSet->GetRasterCount();
 	GDALDataType dataType = dataSet->GetRasterBand(1)->GetRasterDataType();
 
-	//´´½¨Êä³ö¶ÔÏó
+	//åˆ›å»ºè¾“å‡ºå¯¹è±¡
 	GDALDriver *poDriver = (GDALDriver*)GDALGetDriverByName("GTiff");
-	GDALDataset *poDstDS = poDriver->Create(pszDstFile,width,height,channels,dataType,NULL);//Êä³öÎÄ¼şÂ·¾¶×Ô¼º¸Ä
+	GDALDataset *poDstDS = poDriver->Create(pszDstFile,width,height,channels,dataType,NULL);//è¾“å‡ºæ–‡ä»¶è·¯å¾„è‡ªå·±æ”¹
 	for(int i=1;i<=channels;i++){
-		//Í³¼ÆÖ±·½Í¼
-		int HistBand1[256] = {0};
+		//ç»Ÿè®¡ç›´æ–¹å›¾
+		unsigned long long HistBand1[256] = {0};
 
-		//ÀÛ¼ÆÖ±·½Í¼
+		//ç´¯è®¡ç›´æ–¹å›¾
 		float HistR[256] = {0};
 
 		GDALRasterBand *poBand1;
 		GDALRasterBand *pDstband1 = poDstDS->GetRasterBand(i);
 
-		//R²¨¶ÎÀÛ¼ÆÖ±·½Í¼
+		//Ræ³¢æ®µç´¯è®¡ç›´æ–¹å›¾
 		poBand1 = dataSet->GetRasterBand(i);
 		int pmax=poBand1->GetMaximum();
 		int pmin=poBand1->GetMinimum();
@@ -254,8 +256,8 @@ void Linear2(char* pszSrcFile, char* pszDstFile){
 		unsigned char *BufR = new unsigned char[width*height];
 		poBand1->RasterIO(GF_Read,0,0,width,height,pBuf1,width,height,GDT_Byte,1,0);
 
-		//R²¨¶Î¸³Öµ
-		int minR,maxR;//2%´¦µÄ»Ò¶ÈÖµºÍ98%´¦µÄ»Ò¶ÈÖµ
+		//Ræ³¢æ®µèµ‹å€¼
+		int minR,maxR;//2%å¤„çš„ç°åº¦å€¼å’Œ98%å¤„çš„ç°åº¦å€¼
 		minR=0;maxR=255;
 		for(int i=0;i<=255;i++)
 		{
@@ -296,7 +298,7 @@ void Linear2(char* pszSrcFile, char* pszDstFile){
 	GDALClose((GDALDatasetH)dataSet);
 }
 
-//ÆÕÍ¨»Ò¶ÈÏßĞÔÀ­Éì
+//æ™®é€šç°åº¦çº¿æ€§æ‹‰ä¼¸
 void Linear(uchar *ImageMat, int rows, int cols, uchar *ImageResult){
 	float maxI=-10000;
 	int minI=10000;
@@ -316,8 +318,8 @@ void Linear(uchar *ImageMat, int rows, int cols, uchar *ImageResult){
 	}
 }
 
-//¶ş½øÖÆÎÄ¼ş¶ÁÈ¡
-//Ó°ÏñÂ·¾¶£»Ó°ÏñĞĞ£»Ó°ÏñÁĞ£»Ã¿ĞĞ×Ö½ÚÊı£»Ã¿ĞĞÆ«ÒÆÁ¿£»ÎÄ¼şÍ·×Ö½ÚÊı£»Êä³öÓ°ÏñÖĞĞÄ×ø±ê£¨Î»ÓÚÔ­Ê¼Ó°Ïñ£©£»Êä³öÓ°ÏñĞĞÁĞ£»Êä³öÓ°Ïñdata
+//äºŒè¿›åˆ¶æ–‡ä»¶è¯»å–
+//å½±åƒè·¯å¾„ï¼›å½±åƒè¡Œï¼›å½±åƒåˆ—ï¼›æ¯è¡Œå­—èŠ‚æ•°ï¼›æ¯è¡Œåç§»é‡ï¼›æ–‡ä»¶å¤´å­—èŠ‚æ•°ï¼›è¾“å‡ºå½±åƒä¸­å¿ƒåæ ‡ï¼ˆä½äºåŸå§‹å½±åƒï¼‰ï¼›è¾“å‡ºå½±åƒè¡Œåˆ—ï¼›è¾“å‡ºå½±åƒdata
 void LoadData(char* data_fname,int rows,int cols, int dsr_size, int PY, int Initial_JD, int Center_row, int Center_col, int ImageR, int ImageC, uchar *ImageData){
 	FILE *file_id = fopen(data_fname, "r");
 	if( file_id == NULL ){
@@ -347,7 +349,7 @@ void LoadData(char* data_fname,int rows,int cols, int dsr_size, int PY, int Init
 	delete []rowdata;
 }
 
-//Ó°ÏñÁĞ¼ä»Ò¶È¾ùºâ»¯
+//å½±åƒåˆ—é—´ç°åº¦å‡è¡¡åŒ–
 void Col_balance(uchar *ImageMat, int rows, int cols, uchar *ImageResult){
 	float* meanCol = new float[cols];
 	memset(meanCol,0,sizeof(float)*cols);
@@ -376,7 +378,7 @@ void Col_balance1(uchar *ImageMat, int rows, int cols, uchar *ImageResult){
 		meanImage += meanCol[i]/cols;
 	}
 
-	//¼ÆËãÁĞ¼äÌİ¶È£¬¼°Æä¾ùÖµ¡¢·½²î
+	//è®¡ç®—åˆ—é—´æ¢¯åº¦ï¼ŒåŠå…¶å‡å€¼ã€æ–¹å·®
 	float* Col_gradient = new float[cols-2];
 	memset(Col_gradient,0,sizeof(float)*(cols-2));
 	float mean_gradient = 0;
@@ -390,7 +392,7 @@ void Col_balance1(uchar *ImageMat, int rows, int cols, uchar *ImageResult){
 	}
 	sigma_gradient = sqrt(sigma_gradient);
 
-	//¶ÔÌİ¶È±ä»¯Òì³£µÄÁĞ½øĞĞ´¦Àí
+	//å¯¹æ¢¯åº¦å˜åŒ–å¼‚å¸¸çš„åˆ—è¿›è¡Œå¤„ç†
 	memcpy(ImageMat,ImageResult,sizeof(uchar)*rows*cols);
 	for(int i=1;i<cols-1;i++){
 		if(abs(mean_gradient-Col_gradient[i-1])>2*sigma_gradient){
@@ -402,7 +404,6 @@ void Col_balance1(uchar *ImageMat, int rows, int cols, uchar *ImageResult){
 	delete []meanCol;
 	delete []Col_gradient;
 }
-
 void Col_balance2(char *img_path,char* cb_path){
 	GDALAllRegister();
 	GDALDataType Type0 = GDT_Byte;
@@ -414,7 +415,7 @@ void Col_balance2(char *img_path,char* cb_path){
 	poDataset = (GDALDataset*) GDALOpen( img_path,GA_ReadOnly );
 	if( poDataset == NULL || poDataset->GetRasterCount()<1)
 	{
-		printf( "File1: %s²»ÄÜ´ò¿ª£¡\n",img_path);
+		printf( "File1: %sä¸èƒ½æ‰“å¼€ï¼\n",img_path);
 		return;
 	}
 
@@ -458,7 +459,7 @@ void Col_balance2(char *img_path,char* cb_path){
 		}
 	}
 
-	//¼ÆËãÁĞ¼äÌİ¶È£¬¼°Æä¾ùÖµ¡¢·½²î
+	//è®¡ç®—åˆ—é—´æ¢¯åº¦ï¼ŒåŠå…¶å‡å€¼ã€æ–¹å·®
 	/*
 	float* Col_gradient = new float[cols0-2];
 	memset(Col_gradient,0,sizeof(float)*(cols0-2));
@@ -474,10 +475,10 @@ void Col_balance2(char *img_path,char* cb_path){
 	sigma_gradient = sqrt(sigma_gradient);
 	*/
 
-	//¶ÔÌİ¶È±ä»¯Òì³£µÄÁĞ½øĞĞ´¦Àí
-	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //Í¼ÏñÇı¶¯
+	//å¯¹æ¢¯åº¦å˜åŒ–å¼‚å¸¸çš„åˆ—è¿›è¡Œå¤„ç†
+	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //å›¾åƒé©±åŠ¨
 	char** ppszOptions = NULL;
-	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //ÅäÖÃÍ¼ÏñĞÅÏ¢
+	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //é…ç½®å›¾åƒä¿¡æ¯
 	GDALDataset* dst = pDriver->Create(cb_path, cols0, rows0, 1, GDT_Byte, ppszOptions);
 
 	for(int i=0;i<=npart;i++){
@@ -523,9 +524,9 @@ void Col_balance2(char *img_path,char* cb_path){
 	GDALClose(dst);
 }
 
-//pds¸ñÊ½Ó°Ïñ¶ÁÈ¡¼°×ª´æ
+//pdsæ ¼å¼å½±åƒè¯»å–åŠè½¬å­˜
 void pds2tif(char* pszFile, char* dstPath,int ImageR,int ImageC){
-	//×¢²áÎÄ¼ş¸ñÊ½
+	//æ³¨å†Œæ–‡ä»¶æ ¼å¼
 	GDALAllRegister();
 
 	GDALDataType Type0 = GDT_Byte;
@@ -545,9 +546,9 @@ void pds2tif(char* pszFile, char* dstPath,int ImageR,int ImageC){
 	Linear(ImageResult,ImageR,ImageC,ImageData);
 	memcpy(ImageResult,ImageData,sizeof(uchar)*ImageR*ImageC);
 
-	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //Í¼ÏñÇı¶¯
+	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //å›¾åƒé©±åŠ¨
 	char** ppszOptions = NULL;
-	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //ÅäÖÃÍ¼ÏñĞÅÏ¢
+	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //é…ç½®å›¾åƒä¿¡æ¯
 	//char* dstPath = "..\\out\\dst.tif";
 	int bufWidth = ImageC;
 	int bufHeight = ImageR;
@@ -584,11 +585,11 @@ void pds2tif(char* pszFile, char* dstPath,int ImageR,int ImageC){
 	//Linear2(dstPath,"..\\out\\dst1.tif");
 }
 void pds2tif2(){
-	//×¢²áÎÄ¼ş¸ñÊ½
+	//æ³¨å†Œæ–‡ä»¶æ ¼å¼
 	GDALAllRegister();
 
 	GDALDataType Type0 = GDT_Byte;
-	char* pszFile = "..\\data\\1650\\PSP_001777_1650_RED0_0.IMG";
+	char* pszFile = "../data/1650\\PSP_001777_1650_RED0_0.IMG";
 
 	int CenterR=20000;int CenterC=512;
 	int ImageR=40000;int ImageC=1024;
@@ -606,9 +607,9 @@ void pds2tif2(){
 	Linear(ImageResult,ImageR,ImageC,ImageData);
 	memcpy(ImageResult,ImageData,sizeof(uchar)*ImageR*ImageC);
 
-	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //Í¼ÏñÇı¶¯
+	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //å›¾åƒé©±åŠ¨
 	char** ppszOptions = NULL;
-	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //ÅäÖÃÍ¼ÏñĞÅÏ¢
+	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //é…ç½®å›¾åƒä¿¡æ¯
 	char* dstPath = "..\\out\\dst.tif";
 	int bufWidth = 1024;//ImageC;
 	int bufHeight = 1024;//ImageR;
@@ -642,12 +643,12 @@ void pds2tif2(){
 	Linear2(dstPath,"..\\out\\dst1.tif");
 }
 
-//Í¬Ò»CCDÓ°ÏñÆ´½Ó
+//åŒä¸€CCDå½±åƒæ‹¼æ¥
 void mosaic1(char* pszSrcFile1, char* pszSrcFile2, char* pszDstFile,int overlap){
-	//×¢²áÎÄ¼ş¸ñÊ½
+	//æ³¨å†Œæ–‡ä»¶æ ¼å¼
 	GDALAllRegister();
 
-	//¶¨Òå±äÁ¿
+	//å®šä¹‰å˜é‡
 	GDALDataType Type0 = GDT_Byte;
 	GDALDataset *poDataset;
 	GDALRasterBand *poBand;
@@ -655,11 +656,11 @@ void mosaic1(char* pszSrcFile1, char* pszSrcFile2, char* pszDstFile,int overlap)
 
 	uchar *paf1,*paf2;
 
-	//×óÓ°ÏñÊı¾İ¶ÁÈ¡
+	//å·¦å½±åƒæ•°æ®è¯»å–
 	poDataset = (GDALDataset*) GDALOpen( pszSrcFile1,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File1: %s²»ÄÜ´ò¿ª£¡\n",pszSrcFile1);
+		printf( "File1: %sä¸èƒ½æ‰“å¼€ï¼\n",pszSrcFile1);
 		return;
 	}
 
@@ -678,11 +679,11 @@ void mosaic1(char* pszSrcFile1, char* pszSrcFile2, char* pszDstFile,int overlap)
 	poBand->RasterIO(GF_Read, 0, 0, nXSize1, nYSize1, 
 		paf1, nXSize1, nYSize1, Type0, 1, 0 );
 
-	//ÓÒÓ°ÏñÊı¾İ¶ÁÈ¡
+	//å³å½±åƒæ•°æ®è¯»å–
 	poDataset = (GDALDataset*) GDALOpen( pszSrcFile2,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File2: %s²»ÄÜ´ò¿ª£¡\n",pszSrcFile2);
+		printf( "File2: %sä¸èƒ½æ‰“å¼€ï¼\n",pszSrcFile2);
 		return;
 	}
 
@@ -699,7 +700,7 @@ void mosaic1(char* pszSrcFile1, char* pszSrcFile2, char* pszDstFile,int overlap)
 	poBand->RasterIO(GF_Read, 0, 0, nXSize2, nYSize2, 
 		paf2, nXSize2, nYSize2, Type0, 1, 0 );
 
-	//¹Ø±ÕÎÄ¼ş
+	//å…³é—­æ–‡ä»¶
 	GDALClose((GDALDatasetH)poDataset);
 
 	if(nYSize1==nYSize2){ //nXSize1==nXSize2 && 
@@ -720,9 +721,9 @@ void mosaic1(char* pszSrcFile1, char* pszSrcFile2, char* pszDstFile,int overlap)
 		Col_balance(paf,nYSize1,(nXSize2+nXSize1),puf);
 		//memcpy(puf,paf,sizeof(uchar)*2*nXSize1*nYSize1);
 
-		GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //Í¼ÏñÇı¶¯
+		GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //å›¾åƒé©±åŠ¨
 		char** ppszOptions = NULL;
-		ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //ÅäÖÃÍ¼ÏñĞÅÏ¢
+		ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //é…ç½®å›¾åƒä¿¡æ¯
 		GDALDataset* dst = pDriver->Create(pszDstFile, (nXSize2+nXSize1), nYSize1, 1, GDT_Byte, ppszOptions);
 		dst->GetRasterBand(1)->RasterIO(GF_Write, 
 			0, 
@@ -749,10 +750,10 @@ void mosaic1(char* pszSrcFile1, char* pszSrcFile2, char* pszDstFile,int overlap)
 }
 
 int Down_sample(char* pszSrcFile1, int batchsize, char* pszDstFile){
-	//×¢²áÎÄ¼ş¸ñÊ½
+	//æ³¨å†Œæ–‡ä»¶æ ¼å¼
 	GDALAllRegister();
 
-	//¶¨Òå±äÁ¿
+	//å®šä¹‰å˜é‡
 	GDALDataType Type0 = GDT_Byte;
 	GDALDataset *poDataset;
 	GDALRasterBand *poBand;
@@ -760,11 +761,11 @@ int Down_sample(char* pszSrcFile1, int batchsize, char* pszDstFile){
 
 	uchar *paf1,*paf2;
 
-	//×óÓ°ÏñÊı¾İ¶ÁÈ¡
+	//å·¦å½±åƒæ•°æ®è¯»å–
 	poDataset = (GDALDataset*) GDALOpen( pszSrcFile1,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File1: %s²»ÄÜ´ò¿ª£¡\n",pszSrcFile1);
+		printf( "File1: %sä¸èƒ½æ‰“å¼€ï¼\n",pszSrcFile1);
 		return 0;
 	}
 
@@ -777,7 +778,7 @@ int Down_sample(char* pszSrcFile1, int batchsize, char* pszDstFile){
 	nXSize1 = poBand->GetXSize();
 	nYSize1 = poBand->GetYSize();
 
-	//¶¨ÒåÊä³öÍ¼ÏñµÄ´óĞ¡
+	//å®šä¹‰è¾“å‡ºå›¾åƒçš„å¤§å°
 	nXSize2=int(nXSize1/batchsize);
 	nYSize2=int(nYSize1/batchsize);
 	paf2 = new unsigned char[nXSize2*nYSize2];
@@ -826,12 +827,12 @@ int Down_sample(char* pszSrcFile1, int batchsize, char* pszDstFile){
 		}
 	}
 
-	//¹Ø±ÕÎÄ¼ş
+	//å…³é—­æ–‡ä»¶
 	GDALClose((GDALDatasetH)poDataset);
 
-	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //Í¼ÏñÇı¶¯
+	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //å›¾åƒé©±åŠ¨
 	char** ppszOptions = NULL;
-	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //ÅäÖÃÍ¼ÏñĞÅÏ¢
+	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //é…ç½®å›¾åƒä¿¡æ¯
 	GDALDataset* dst = pDriver->Create(pszDstFile, nXSize2, nYSize2, 1, GDT_Byte, ppszOptions);
 	dst->GetRasterBand(1)->RasterIO(GF_Write, 
 		0, 
@@ -856,10 +857,10 @@ int Down_sample(char* pszSrcFile1, int batchsize, char* pszDstFile){
 }
 
 int Hijitreg_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, int* dr, int* dc){
-	//×¢²áÎÄ¼ş¸ñÊ½
+	//æ³¨å†Œæ–‡ä»¶æ ¼å¼
 	GDALAllRegister();
 
-	//¶ÁÈëÓ°Ïñ
+	//è¯»å…¥å½±åƒ
 	GDALDataType Type0 = GDT_Byte;
 	GDALDataset *poDataset;
 	GDALRasterBand *poBand;
@@ -867,11 +868,11 @@ int Hijitreg_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, int* d
 	uchar *imgData1,*imgData2;
 	int rows1,cols1,rows2,cols2;
 
-	//×óÓ°Ïñ
+	//å·¦å½±åƒ
 	poDataset = (GDALDataset*) GDALOpen( imagepathL,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File1: %s²»ÄÜ´ò¿ª£¡\n",imagepathL);
+		printf( "File1: %sä¸èƒ½æ‰“å¼€ï¼\n",imagepathL);
 		return 0;
 	}
 
@@ -888,11 +889,11 @@ int Hijitreg_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, int* d
 	poBand->RasterIO(GF_Read, 0, 0, cols1, rows1, 
 		imgData1, cols1, rows1, Type0, 1, 0 );
 
-	//ÓÒÓ°Ïñ
+	//å³å½±åƒ
 	poDataset = (GDALDataset*) GDALOpen( imagepathR,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File1: %s²»ÄÜ´ò¿ª£¡\n",imagepathR);
+		printf( "File1: %sä¸èƒ½æ‰“å¼€ï¼\n",imagepathR);
 		return 0;
 	}
 
@@ -909,15 +910,15 @@ int Hijitreg_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, int* d
 	poBand->RasterIO(GF_Read, 0, 0, cols2, rows2, 
 		imgData2, cols2, rows2, Type0, 1, 0 );
 
-	//¹Ø±ÕÎÄ¼ş
+	//å…³é—­æ–‡ä»¶
 	GDALClose((GDALDatasetH)poDataset);
 
 
-	//Éú³É¸ñÍøµã
+	//ç”Ÿæˆæ ¼ç½‘ç‚¹
 	int SampleRateLine = 10;
 	int SampleRateSample = 4;
 
-	//¸ñÍøµã»Ò¶ÈÆ¥Åä
+	//æ ¼ç½‘ç‚¹ç°åº¦åŒ¹é…
 	int dl,ds;
 	int w_size=5;
 	int N=w_size*w_size;
@@ -973,7 +974,7 @@ int Hijitreg_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, int* d
 			}
 		}
 	}
-	//×îĞ¡¶ş³ËË¼Ïë£¨dx£¬dy£©¾«È·¶ÔÆë
+	//æœ€å°äºŒä¹˜æ€æƒ³ï¼ˆdxï¼Œdyï¼‰ç²¾ç¡®å¯¹é½
 
 	*dr=dl_max;
 	*dc=ds_max;
@@ -983,10 +984,10 @@ int Hijitreg_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, int* d
 }
 
 int CCDmosaic_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, char* outpath){
-	//×¢²áÎÄ¼ş¸ñÊ½
+	//æ³¨å†Œæ–‡ä»¶æ ¼å¼
 	GDALAllRegister();
 
-	//¶ÁÈëÓ°Ïñ
+	//è¯»å…¥å½±åƒ
 	GDALDataType Type0 = GDT_Byte;
 	GDALDataset *poDataset;
 	GDALRasterBand *poBand;
@@ -994,11 +995,11 @@ int CCDmosaic_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, char*
 	uchar *imgData1,*imgData2;
 	int rows1,cols1,rows2,cols2;
 
-	//×óÓ°Ïñ
+	//å·¦å½±åƒ
 	poDataset = (GDALDataset*) GDALOpen( imagepathL,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File1: %s²»ÄÜ´ò¿ª£¡\n",imagepathL);
+		printf( "File1: %sä¸èƒ½æ‰“å¼€ï¼\n",imagepathL);
 		return 0;
 	}
 
@@ -1015,11 +1016,11 @@ int CCDmosaic_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, char*
 	poBand->RasterIO(GF_Read, 0, 0, cols1, rows1, 
 		imgData1, cols1, rows1, Type0, 1, 0 );
 
-	//ÓÒÓ°Ïñ
+	//å³å½±åƒ
 	poDataset = (GDALDataset*) GDALOpen( imagepathR,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File1: %s²»ÄÜ´ò¿ª£¡\n",imagepathR);
+		printf( "File1: %sä¸èƒ½æ‰“å¼€ï¼\n",imagepathR);
 		return 0;
 	}
 
@@ -1036,15 +1037,15 @@ int CCDmosaic_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, char*
 	poBand->RasterIO(GF_Read, 0, 0, cols2, rows2, 
 		imgData2, cols2, rows2, Type0, 1, 0 );
 
-	//¹Ø±ÕÎÄ¼ş
+	//å…³é—­æ–‡ä»¶
 	GDALClose((GDALDatasetH)poDataset);
 
 
-	//Éú³É¸ñÍøµã
+	//ç”Ÿæˆæ ¼ç½‘ç‚¹
 	int SampleRateLine = 10;
 	int SampleRateSample = 4;
 
-	//¸ñÍøµã»Ò¶ÈÆ¥Åä
+	//æ ¼ç½‘ç‚¹ç°åº¦åŒ¹é…
 	int dl,ds;
 	int w_size=5;
 	int N=w_size*w_size;
@@ -1100,9 +1101,9 @@ int CCDmosaic_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, char*
 			}
 		}
 	}
-	//×îĞ¡¶ş³ËË¼Ïë£¨dx£¬dy£©¾«È·¶ÔÆë
+	//æœ€å°äºŒä¹˜æ€æƒ³ï¼ˆdxï¼Œdyï¼‰ç²¾ç¡®å¯¹é½
 
-	//Æ´½Ó
+	//æ‹¼æ¥
 	int beginR = 0<=dl_max ? 0:dl_max;
 	int endR = rows1>rows2+dl_max ? rows1:rows2+dl_max;
 
@@ -1143,9 +1144,9 @@ int CCDmosaic_gdal(char* imagepathL, char* imagepathR, int OverlapSamples, char*
 	//Col_balance(paf,rows,cols,puf);
 	//delete[] paf;
 
-	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //Í¼ÏñÇı¶¯
+	GDALDriver *pDriver = GetGDALDriverManager()->GetDriverByName("GTIFF"); //å›¾åƒé©±åŠ¨
 	char** ppszOptions = NULL;
-	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //ÅäÖÃÍ¼ÏñĞÅÏ¢
+	ppszOptions = CSLSetNameValue(ppszOptions, "BIGTIFF", "IF_NEEDED"); //é…ç½®å›¾åƒä¿¡æ¯
 	GDALDataset* dst = pDriver->Create(outpath, cols, rows, 1, GDT_Byte, ppszOptions);
 	dst->GetRasterBand(1)->RasterIO(GF_Write, 
 		0, 
@@ -1172,30 +1173,33 @@ void My_rec2NEH(const char *projRef,double X,double Y,double Z,double* N,double*
 	ConstSpiceDouble rectan[3]={X,Y,Z};
 	//ConstSpiceDouble rectan[3]={-3396190,0,0};
 	//recgeo_c(rectan,3396190,0.00736,E,N,H); 
-	recgeo_c(rectan,3396190,0,E,N,H); 
+	recgeo_c(rectan,3396190,0.00736,E,N,H); 
 
 	//gdal:geo2neh
 	OGRSpatialReference fRef;
 	char *tmp = NULL;
 	//const char *projRef =poDataset->GetProjectionRef();
-	/** »ñµÃprojRefµÄÒ»·İ¿½±´ **/
-	/** ÓÉÓÚprojRefÊÇconst char*,ÏÂÃæµÄÒ»¸öº¯Êı²»½ÓÊÜ£¬ËùÒÔĞèÒª×ª»»³É·Çconst **/
+	/** è·å¾—projRefçš„ä¸€ä»½æ‹·è´ **/
+	/** ç”±äºprojRefæ˜¯const char*,ä¸‹é¢çš„ä¸€ä¸ªå‡½æ•°ä¸æ¥å—ï¼Œæ‰€ä»¥éœ€è¦è½¬æ¢æˆéconst **/
 	tmp = (char *)malloc(strlen(projRef) + 1);
-	strcpy_s(tmp, strlen(projRef)+1, projRef);
+	strcpy(tmp, projRef);
 
 
-	/** ÉèÖÃÔ­Ê¼µÄ×ø±ê²ÎÊı£¬ºÍtest.tifÒ»ÖÂ **/
+	/** è®¾ç½®åŸå§‹çš„åæ ‡å‚æ•°ï¼Œå’Œtest.tifä¸€è‡´ **/
 	fRef.importFromWkt(&tmp);           //NEH
-	/** ÉèÖÃ×ª»»ºóµÄ×ø±ê **/
+	/** è®¾ç½®è½¬æ¢åçš„åæ ‡ **/
 	OGRSpatialReference *tRef;
-	tRef=fRef.CloneGeogCS();  //Ö»¸´ÖÆ³öµØÀí×ø±êÄÇ²¿·Ö(lat,lon,H)
+	tRef=fRef.CloneGeogCS();  //åªå¤åˆ¶å‡ºåœ°ç†åæ ‡é‚£éƒ¨åˆ†(lat,lon,H)
 
-	/** ÏÂÃæ½øĞĞ×ø±ê×ª»»£¬µ½´ËÎªÖ¹¶¼²»ĞèÒªproj£¬µ«ÊÇÏÂÃæµÄÄÚÈİÈç¹û²»°²×°proj½«»áÎŞ·¨±àÒë **/
+	/** ä¸‹é¢è¿›è¡Œåæ ‡è½¬æ¢ï¼Œåˆ°æ­¤ä¸ºæ­¢éƒ½ä¸éœ€è¦projï¼Œä½†æ˜¯ä¸‹é¢çš„å†…å®¹å¦‚æœä¸å®‰è£…projå°†ä¼šæ— æ³•ç¼–è¯‘ **/
 	OGRCoordinateTransformation *coordTrans;
 	coordTrans = OGRCreateCoordinateTransformation(tRef, &fRef);
-	//*N=*N*180/3.1425926;
-	//*E=*E*180/3.1425926;
-	coordTrans->Transform(1, N, E, H);
+	
+	*N=(*N)*180/3.1425926;
+	*E=(*E)*180/3.1425926;
+	//std::cout<<*N<<" "<<*E<<std::endl;
+	//coordTrans->Transform(1, E, N, H);
+	//std::cout<<*N<<" "<<*E<<std::endl;
 	//printf("lat:%lf lon:%lf H:%lf\n",*N,*E,*H);
 }
 
@@ -1204,50 +1208,50 @@ void My_NEH2rec(const char *projRef,double N,double E,double H,double* X,double*
 	OGRSpatialReference fRef;
 	char *tmp = NULL;
 	//const char *projRef =poDataset->GetProjectionRef();
-	/** »ñµÃprojRefµÄÒ»·İ¿½±´ **/
-	/** ÓÉÓÚprojRefÊÇconst char*,ÏÂÃæµÄÒ»¸öº¯Êı²»½ÓÊÜ£¬ËùÒÔĞèÒª×ª»»³É·Çconst **/
+	/** è·å¾—projRefçš„ä¸€ä»½æ‹·è´ **/
+	/** ç”±äºprojRefæ˜¯const char*,ä¸‹é¢çš„ä¸€ä¸ªå‡½æ•°ä¸æ¥å—ï¼Œæ‰€ä»¥éœ€è¦è½¬æ¢æˆéconst **/
 	tmp = (char *)malloc(strlen(projRef) + 1);
-	strcpy_s(tmp, strlen(projRef)+1, projRef);
+	strcpy(tmp, projRef);
 
 
-	/** ÉèÖÃÔ­Ê¼µÄ×ø±ê²ÎÊı£¬ºÍtest.tifÒ»ÖÂ **/
+	/** è®¾ç½®åŸå§‹çš„åæ ‡å‚æ•°ï¼Œå’Œtest.tifä¸€è‡´ **/
 	fRef.importFromWkt(&tmp);           //NEH
-	/** ÉèÖÃ×ª»»ºóµÄ×ø±ê **/
+	/** è®¾ç½®è½¬æ¢åçš„åæ ‡ **/
 	OGRSpatialReference *tRef;
-	tRef=fRef.CloneGeogCS();  //Ö»¸´ÖÆ³öµØÀí×ø±êÄÇ²¿·Ö(lat,lon,H)
+	tRef=fRef.CloneGeogCS();  //åªå¤åˆ¶å‡ºåœ°ç†åæ ‡é‚£éƒ¨åˆ†(lat,lon,H)
 
-	/** ÏÂÃæ½øĞĞ×ø±ê×ª»»£¬µ½´ËÎªÖ¹¶¼²»ĞèÒªproj£¬µ«ÊÇÏÂÃæµÄÄÚÈİÈç¹û²»°²×°proj½«»áÎŞ·¨±àÒë **/
+	/** ä¸‹é¢è¿›è¡Œåæ ‡è½¬æ¢ï¼Œåˆ°æ­¤ä¸ºæ­¢éƒ½ä¸éœ€è¦projï¼Œä½†æ˜¯ä¸‹é¢çš„å†…å®¹å¦‚æœä¸å®‰è£…projå°†ä¼šæ— æ³•ç¼–è¯‘ **/
 	OGRCoordinateTransformation *coordTrans;
 	coordTrans = OGRCreateCoordinateTransformation(&fRef, tRef);
-	coordTrans->Transform(1, &N, &E, &H);
-	//N=N*3.1415926/180;
-	//E=E*3.1415926/180;
+	coordTrans->Transform(1, &N, &E, &H);  //è§’åº¦è¾“å‡º
+	N=N*3.1415926/180;
+	E=E*3.1415926/180;
 	//printf("lat:%lf lon:%lf H:%lf\n",N,E,H);
 
 	//georec
 	SpiceDouble* rectan = new double[3];
 	//georec_c(E,N,H,3396190,0.00736,rectan);
-	georec_c(E,N,H,3396190,0,rectan);
+	georec_c(E,N,H,3396190,0,rectan);  //å¼§åº¦è¾“å…¥
 	*X=rectan[0];
 	*Y=rectan[1];
 	*Z=rectan[2];
 }
 
-//¶ÁÈ¡MOLA DEMÊı¾İ
+//è¯»å–MOLA DEMæ•°æ®
 void LoadDEM(char* imagepath, float X, float Y, float* Z){
-	//×¢²áÎÄ¼ş¸ñÊ½
+	//æ³¨å†Œæ–‡ä»¶æ ¼å¼
 	GDALAllRegister();
 
 	GDALDataset *poDataset;
-	//Ê¹ÓÃÖ»¶Á·½Ê½´ò¿ªÍ¼Ïñ
+	//ä½¿ç”¨åªè¯»æ–¹å¼æ‰“å¼€å›¾åƒ
 	poDataset = (GDALDataset*) GDALOpen( imagepath,GA_ReadOnly );
 	if( poDataset == NULL )
 	{
-		printf( "File: %s²»ÄÜ´ò¿ª£¡\n",imagepath);
+		printf( "File: %sä¸èƒ½æ‰“å¼€ï¼\n",imagepath);
 		return;
 	}
 
-	//Êä³öÍ¼ÏñµÄ×óÉÏ½Ç×ø±êºÍ·Ö±æÂÊĞÅÏ¢
+	//è¾“å‡ºå›¾åƒçš„å·¦ä¸Šè§’åæ ‡å’Œåˆ†è¾¨ç‡ä¿¡æ¯
 	double adfGeoTransform[6];
 	if( poDataset->GetGeoTransform( adfGeoTransform) == CE_None )
 	{
@@ -1267,7 +1271,7 @@ void LoadDEM(char* imagepath, float X, float Y, float* Z){
 	case GDT_Byte:
 		{
 			unsigned char *pafScanblock1;
-			pafScanblock1 = (unsigned char *)CPLMalloc(sizeof(unsigned char)*(1)*(1));//½¨ÒéÄÜĞ¡ÔòĞ¡·ñÔò»áÔì³ÉÄÚ´æ²»×ãµÄÇé¿ö
+			pafScanblock1 = (unsigned char *)CPLMalloc(sizeof(unsigned char)*(1)*(1));//å»ºè®®èƒ½å°åˆ™å°å¦åˆ™ä¼šé€ æˆå†…å­˜ä¸è¶³çš„æƒ…å†µ
 			poBand1->RasterIO(GF_Read, dx, dy, 1, 1, pafScanblock1, 1, 1, GDALDataType(poBand1->GetRasterDataType()), 0, 0);
 			cout << Xgeo << "  " << Ygeo << "  " << *pafScanblock1 << endl;
 			break;
@@ -1337,13 +1341,13 @@ void LoadDEM(char* imagepath, float X, float Y, float* Z){
 }
 
 void xulie_process(){
-	char* imagepath1="..\\data\\1650\\PSP_001777_1650_RED";
-	char* imagepath2="..\\data\\1655\\PSP_001513_1655_RED";
-	char* outpath1="G:\\Mars\\data\\1650\\src\\PSP_001777_1650_RED";
-	char* outpath11="G:\\Mars\\data\\1650\\mosaic\\PSP_001777_1650_RED";
-	char* outpath2="G:\\Mars\\data\\1655\\src\\PSP_001513_1655_RED";
-	char* outpath22="G:\\Mars\\data\\1655\\mosaic\\PSP_001513_1655_RED";
-	char* outpath="G:\\Mars\\data\\";
+	char* imagepath1="../data/1650\\PSP_001777_1650_RED";
+	char* imagepath2="../data/1655\\PSP_001513_1655_RED";
+	char* outpath1="G:\\Mars../data/1650\\src\\PSP_001777_1650_RED";
+	char* outpath11="G:\\Mars../data/1650\\mosaic\\PSP_001777_1650_RED";
+	char* outpath2="G:\\Mars../data/1655\\src\\PSP_001513_1655_RED";
+	char* outpath22="G:\\Mars../data/1655\\mosaic\\PSP_001513_1655_RED";
+	char* outpath="G:\\Mars../data/";
 
 	for(int i=0;i<10;i++){
 		char* out1 = new char[80];
@@ -1358,14 +1362,14 @@ void xulie_process(){
 		sprintf( dstpath, "%s%d%s", outpath11, i, ".tif" );
 
 
-		//Æ´½Ó
+		//æ‹¼æ¥
 		pds2tif(out1, dstpath1,40000,1024);
 		pds2tif(out2, dstpath2,80000,1024);
 		mosaic1(dstpath2, dstpath1, dstpath,0);/**/
 
-		//½µ²ÉÑù
+		//é™é‡‡æ ·
 		char* dstpathds = new char[80];
-		sprintf( dstpathds, "%s%s%d%s", outpath,"\\1650\\downsample\\PSP_001777_1650_RED", i, "_ds.tif" );
+		sprintf( dstpathds, "%s%s%d%s", outpath,"/1650\\downsample/PSP_001777_1650_RED", i, "_ds.tif" );
 		Down_sample(dstpath,8,dstpathds);
 
 		delete [] out1,out2,dstpath1,dstpath2,dstpath,dstpathds;
@@ -1384,15 +1388,15 @@ void xulie_process(){
 		sprintf( dstpath, "%s%d%s", outpath22, i, ".tif" );
 
 
-		//Æ´½Ó
+		//æ‹¼æ¥
 
 		pds2tif(out1, dstpath1,40000,1024);
 		pds2tif(out2, dstpath2,80000,1024);
 		mosaic1(dstpath2, dstpath1, dstpath,0);/**/
 
-		//½µ²ÉÑù
+		//é™é‡‡æ ·
 		char* dstpathds = new char[80];
-		sprintf( dstpathds, "%s%s%d%s", outpath,"\\1655\\downsample\\PSP_001513_1655_RED", i, "_ds.tif" );
+		sprintf( dstpathds, "%s%s%d%s", outpath,"/1655\\downsample/PSP_001513_1655_RED", i, "_ds.tif" );
 		Down_sample(dstpath,8,dstpathds);
 
 		delete [] out1,out2,dstpath1,dstpath2,dstpath,dstpathds;
@@ -1404,13 +1408,13 @@ void xulie_process1(char* filepath,char* outfilepath,char* xulie_ID1,char* xulie
 
 	char* imagepath1 = new char[80];
 	char* imagepath2 = new char[80];
-	sprintf( imagepath1, "%s%s%s%s%s%s", filepath, "\\", xulie_ID1, "\\",xulie_ID1,"_RED");
-	sprintf( imagepath2, "%s%s%s%s%s%s", filepath, "\\", xulie_ID2, "\\",xulie_ID2,"_RED");
+	sprintf( imagepath1, "%s%s%s%s%s%s", filepath, "/", xulie_ID1, "/",xulie_ID1,"_RED");
+	sprintf( imagepath2, "%s%s%s%s%s%s", filepath, "/", xulie_ID2, "/",xulie_ID2,"_RED");
 
 	char* outpath1 = new char[80];
 	char* outpath2 = new char[80];
-	sprintf( outpath1, "%s%s%s%s%s%s", outfilepath, "\\", xulie_ID1, "\\downsample\\0\\",xulie_ID1,"_RED");
-	sprintf( outpath2, "%s%s%s%s%s%s", outfilepath, "\\", xulie_ID2, "\\downsample\\0\\",xulie_ID2,"_RED");
+	sprintf( outpath1, "%s%s%s%s%s%s", outfilepath, "/", xulie_ID1, "/downsample/0\\",xulie_ID1,"_RED");
+	sprintf( outpath2, "%s%s%s%s%s%s", outfilepath, "/", xulie_ID2, "/downsample/0\\",xulie_ID2,"_RED");
 
 
 	for(int i=0;i<10;i++){
@@ -1426,7 +1430,7 @@ void xulie_process1(char* filepath,char* outfilepath,char* xulie_ID1,char* xulie
 		sprintf( dstpath, "%s%d%s", outpath1, i, ".tif" );
 
 
-		//Æ´½Ó
+		//æ‹¼æ¥
 		pds2tif(out1, dstpath1,rows1,1024);
 		pds2tif(out2, dstpath2,rows1,1024);
 		mosaic1(dstpath2, dstpath1, dstpath,0);/**/
@@ -1447,7 +1451,7 @@ void xulie_process1(char* filepath,char* outfilepath,char* xulie_ID1,char* xulie
 		sprintf( dstpath, "%s%d%s", outpath2, i, ".tif" );
 
 
-		//Æ´½Ó
+		//æ‹¼æ¥
 		pds2tif(out1, dstpath1,rows2,1024);
 		pds2tif(out2, dstpath2,rows2,1024);
 		mosaic1(dstpath2, dstpath1, dstpath,0);/**/
@@ -1456,17 +1460,51 @@ void xulie_process1(char* filepath,char* outfilepath,char* xulie_ID1,char* xulie
 	}
 }
 
+void tif_load(char* imagepath1,uchar* data1){
+	GDALAllRegister();
+	//å®šä¹‰å˜é‡
+	GDALDataType Type0 = GDT_Byte;
+	GDALDataset *poDataset;
+	int nXSize1,nYSize1,nBands;
+	//uchar* data1;
+
+	//å·¦å½±åƒè¯»å–
+	
+	poDataset = (GDALDataset*) GDALOpen( imagepath1,GA_ReadOnly);
+	if( poDataset == NULL )
+	{
+		printf( "File1: %sä¸èƒ½æ‰“å¼€ï¼\n",imagepath1);
+		return;
+	}
+	if(poDataset->GetRasterCount()<1){
+		printf("è§†å·®å›¾æ³¢æ®µå°äº1ï¼\n");
+		return;
+	}
+	nXSize1 = poDataset->GetRasterBand(1)->GetXSize();
+	nYSize1 = poDataset->GetRasterBand(1)->GetYSize();
+	nBands = poDataset->GetRasterCount();
+	int rows1=nYSize1;
+	int cols1=nXSize1;
+	Type0 = poDataset->GetRasterBand(1)->GetRasterDataType();
+
+	//data1 = new uchar[nXSize1*nYSize1];
+	poDataset->GetRasterBand(1)->RasterIO(GF_Read, 0, 0, nXSize1, nYSize1, 
+		data1, nXSize1, nYSize1, Type0, 0, 0 );
+
+	GDALClose(poDataset);
+}
+
 void ds_mosaic(){
 	char* outpath="G:\\Mars\\data";
 
 	char* dstpathds0 = new char[80];
-	sprintf( dstpathds0, "%s%s%d%s", outpath,"\\1650\\downsample\\PSP_001777_1650_RED", 0, "_ds.tif" );
+	sprintf( dstpathds0, "%s%s%d%s", outpath,"/1650\\downsample/PSP_001777_1650_RED", 0, "_ds.tif" );
 	char* mosaicpath = new char[80];
-	sprintf( mosaicpath, "%s%s", outpath,"\\1650\\downsample\\PSP_001777_1650_RED.tif" );
+	sprintf( mosaicpath, "%s%s", outpath,"/1650\\downsample/PSP_001777_1650_RED.tif" );
 	for(int i=1;i<10;i++){
-		//½µ²ÉÑù
+		//é™é‡‡æ ·
 		char* dstpathds = new char[80];
-		sprintf( dstpathds, "%s%s%d%s", outpath,"\\1650\\downsample\\PSP_001777_1650_RED", i, "_ds.tif" );
+		sprintf( dstpathds, "%s%s%d%s", outpath,"/1650\\downsample/PSP_001777_1650_RED", i, "_ds.tif" );
 		if(i==1){
 			mosaic1(dstpathds0,dstpathds,mosaicpath,6);
 		}
@@ -1476,12 +1514,12 @@ void ds_mosaic(){
 	}
 
 
-	sprintf( dstpathds0, "%s%s%d%s", outpath,"\\1655\\downsample\\PSP_001513_1655_RED", 0, "_ds.tif" );
-	sprintf( mosaicpath, "%s%s", outpath,"\\1655\\downsample\\PSP_001513_1655_RED.tif" );
+	sprintf( dstpathds0, "%s%s%d%s", outpath,"/1655\\downsample/PSP_001513_1655_RED", 0, "_ds.tif" );
+	sprintf( mosaicpath, "%s%s", outpath,"/1655\\downsample/PSP_001513_1655_RED.tif" );
 	for(int i=1;i<10;i++){
-		//½µ²ÉÑù
+		//é™é‡‡æ ·
 		char* dstpathds = new char[80];
-		sprintf( dstpathds, "%s%s%d%s", outpath,"\\1655\\downsample\\PSP_001513_1655_RED", i, "_ds.tif" );
+		sprintf( dstpathds, "%s%s%d%s", outpath,"/1655\\downsample/PSP_001513_1655_RED", i, "_ds.tif" );
 		if(i==1){
 			mosaic1(dstpathds0,dstpathds,mosaicpath,6);
 		}
@@ -1493,20 +1531,20 @@ void ds_mosaic(){
 
 void gdal_test(){
 
-	//×ª´æºÍÆ´½Ó
-	char* imagepath1="..\\data\\1655\\PSP_001513_1655_RED0_0.IMG";
-	char* imagepath2="..\\data\\1655\\PSP_001513_1655_RED0_1.IMG";
-	char* dstpath1="..\\data\\1655tif\\PSP_001513_1655_RED0_0.tif";
-	char* dstpath2="..\\data\\1655tif\\PSP_001513_1655_RED0_1.tif";
+	//è½¬å­˜å’Œæ‹¼æ¥
+	char* imagepath1="../data/1655\\PSP_001513_1655_RED0_0.IMG";
+	char* imagepath2="../data/1655\\PSP_001513_1655_RED0_1.IMG";
+	char* dstpath1="../data/1655tif\\PSP_001513_1655_RED0_0.tif";
+	char* dstpath2="../data/1655tif\\PSP_001513_1655_RED0_1.tif";
 
-	char* dstpath="..\\data\\1655tif\\PSP_001513_1655_RED0.tif";
-	char* dstpath_linear="..\\data\\1655tif\\PSP_001513_1655_RED0_Linear.tif";
+	char* dstpath="../data/1655tif\\PSP_001513_1655_RED0.tif";
+	char* dstpath_linear="../data/1655tif\\PSP_001513_1655_RED0_Linear.tif";
 
 	pds2tif(imagepath1, dstpath1,40000,1024);
 	pds2tif(imagepath2, dstpath2,80000,1024);
 	mosaic1(dstpath2, dstpath1, dstpath,0);
 	Linear2(dstpath, dstpath_linear);
 
-	//½µ²ÉÑù
-	//Down_sample("..\\data\\1655tif\\PSP_001513_1655_RED0.tif",8,"..\\data\\1655tif\\PSP_001513_1655_RED0_ds8.tif");
+	//é™é‡‡æ ·
+	//Down_sample("../data/1655tif\\PSP_001513_1655_RED0.tif",8,"../data/1655tif\\PSP_001513_1655_RED0_ds8.tif");
 }

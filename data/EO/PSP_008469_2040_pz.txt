@@ -1,0 +1,19 @@
+\begindata
+
+PATH_VALUES  = ( '../data/EO/kernals'
+) 
+
+PATH_SYMBOLS = ( 'A'
+)
+
+KERNELS_TO_LOAD = (
+'$A/ck/mro_sc_psp_080513_080519.bc',
+'$A/spk/mar097.bsp',
+'$A/spk/mro_psp7.bsp',
+'$A/fk/mro_v14.tf',
+'$A/iak/hiriseAddendum006.ti',
+'$A/lsk/naif0012.tls',
+'$A/ik/mro_hirise_v11.ti',
+'$A/sclk/MRO_SCLKSCET.00086.65536.tsc',
+'$A/pck/pck00009.tpc',
+)

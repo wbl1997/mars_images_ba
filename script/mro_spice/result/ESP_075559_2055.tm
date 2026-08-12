@@ -1,0 +1,20 @@
+KPL/MK
+\begindata
+
+PATH_VALUES  = ( '/media/wbl/Elements/paper_experiments/Mars/kernals/MRO'
+)
+
+PATH_SYMBOLS = ( 'A'
+)
+
+KERNELS_TO_LOAD = (
+'$A/lsk/naif0012.tls',
+'$A/sclk/mro_sclkscet_00114_65536.tsc',
+'$A/pck/pck00008.tpc',
+'$A/fk/mro_v16.tf',
+'$A/ik/mro_hirise_v12.ti',
+'$A/ck/mro_sc_psp_220906_220912.bc',
+'$A/spk/mro_psp64_ssd_mro95a.bsp',
+'$A/spk/mar097.bsp',
+)
+\begintext

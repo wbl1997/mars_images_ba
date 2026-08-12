@@ -1,24 +1,37 @@
 #include "EO.h"
 
-//Å·À­½Ç¼ÆËãĞı×ª¾ØÕó
-void Eul2R_(float phi,float w,float k,float* R){
-	R[0]=cos(phi)*cos(k)-sin(phi)*sin(w)*sin(k);
-	R[1]=-cos(phi)*sin(k)-sin(phi)*sin(w)*cos(k);
-	R[1]=-R[1];
-	R[2]=-sin(phi)*cos(w);
-	R[3]=cos(w)*sin(k);
-	R[3]=-R[3];
-	R[4]=cos(w)*cos(k);
-	R[5]=-sin(w);
-	R[5]=-R[5];
-	R[6]=sin(phi)*cos(k)+cos(phi)*sin(w)*sin(k);
-	R[7]=-sin(phi)*sin(k)+cos(phi)*sin(w)*cos(k);
-	R[7]=-R[7];
-	R[8]=cos(phi)*cos(w);
+namespace {
+
+bool consume_spice_error(const char* stage, const char* detail = nullptr){
+	if(!failed_c()){
+		return false;
+	}
+
+	SpiceChar shortMsg[1841];
+	SpiceChar longMsg[1841];
+	getmsg_c("SHORT", sizeof(shortMsg), shortMsg);
+	getmsg_c("LONG", sizeof(longMsg), longMsg);
+
+	if(detail != nullptr){
+		fprintf(stderr, "[SPICE][%s] %s\n", stage, detail);
+	}
+	fprintf(stderr, "[SPICE][%s] SHORT: %s\n", stage, shortMsg);
+	fprintf(stderr, "[SPICE][%s] LONG : %s\n", stage, longMsg);
+
+	reset_c();
+	return true;
 }
 
-//ÊäÈë£ºÊä³öÂ·¾¶£»ÆğÊ¼º½ÌìÆ÷Ê±¼ä£»TDIÏßÂ·ÑÓ³Ù£»´°¿Ú´óĞ¡£»TDIÄ£Ê½£¨8£¬32£¬64£¬128£©£»²ÉÑùĞĞÊı
-void GetEO( char * out, char *SCLK, double DLINE, double BIN, double TDI, int LINE )
+}
+
+EO::EO(){
+}
+
+EO::~EO(){
+}
+
+//è¾“å…¥ï¼šè¾“å‡ºè·¯å¾„ï¼›èµ·å§‹èˆªå¤©å™¨æ—¶é—´ï¼›TDIçº¿è·¯å»¶è¿Ÿï¼›çª—å£å¤§å°ï¼›TDIæ¨¡å¼ï¼ˆ8ï¼Œ32ï¼Œ64ï¼Œ128ï¼‰ï¼›é‡‡æ ·è¡Œæ•°
+void EO::GetEO(char * out, char *SCLK, double DLINE, double BIN, double TDI, int LINE)
 {
 	int i,j,k,found;
 	char utcstr[30];
@@ -50,7 +63,7 @@ void GetEO( char * out, char *SCLK, double DLINE, double BIN, double TDI, int LI
 		pxform_c( "J2000", "IAU_MARS", et, R1 );
 		pxform_c( "MRO_HIRISE_OPTICAL_AXIS", "J2000", et, R2 );
 
-		mxm_c( R1, R2, Rt ); //RtÎªMRO_HIRISE_OPTICAL_AXIS-->IAU£¬ºÍÉãÓ°²âÁ¿Ò»ÖÂ£¬ÎŞĞèÔÙ×ªÖÃ
+		mxm_c( R1, R2, Rt ); //Rtä¸ºMRO_HIRISE_OPTICAL_AXIS-->IAUï¼Œå’Œæ‘„å½±æµ‹é‡ä¸€è‡´ï¼Œæ— éœ€å†è½¬ç½®
 		for(j=0;j<3;j++)
 			for(k=0;k<3;k++)
 				R[j][k] = Rt[k][j];
@@ -65,52 +78,51 @@ void GetEO( char * out, char *SCLK, double DLINE, double BIN, double TDI, int LI
 	fclose(fout1);
 }
 
-
-//ÊäÈë£ºÊä³öÂ·¾¶£»ÆğÊ¼ĞÇÀúÊ±¼ä£»TDIÏßÂ·ÑÓ³Ù£»´°¿Ú´óĞ¡£»TDIÄ£Ê½£¨8£¬32£¬64£¬128£©£»²ÉÑùĞĞÊı
-void GetEO1( char * out, double et0, double DLINE, double BIN, double TDI, int LINE )
+void EO::GetEO_(char * out, char *SCLK, double DLINE, double BIN, double TDI, int LINE)
 {
 	int i,j,k,found;
 	char utcstr[30];
-	double LR,et1,et,encsclk,clkout,lt,lt1,a1,a2,a3;
-	double R[3][3], R1[3][3], R2[3][3], Rt[3][3];
-	double pos1[3], pos2[3], ptarg[3];
-	char* out1 = new char[80];
-	double* pos = new double[3];
-	double clight = 2.99792458E+05;   //¹âËÙkm/s
-	sprintf( out1, "%s%s", out, "_1.txt" );
-	sprintf( out, "%s%s", out, ".txt" );
-
-	printf("%s\n",out1);
-
+	double LR,et0,et1,et,encsclk,clkout,lt,a1,a2,a3;
+	double pos[3], R[3][3], R1[3][3], R2[3][3], Rt[3][3];
+	char out1[80];
+	sprintf( out1, "%s%s.txt", out, "_1" );
+	FILE *fout1 = fopen(out1, "w");
 	FILE *fout = fopen(out, "w");
-	FILE *fout1 = fopen(out1,"w");
-	if( fout == NULL || fout1 == NULL){
-		printf("Fail to open file!\n");
-		return;  
-	}
 
-	LR = ( 74.0 + DLINE/16.0 )/1000000;    //74Îª·ÉĞĞÏßËÙ¶È£¿
+	SpiceInt sc;
+	SpiceBoolean found0;
+	bodn2c_c("MGS",&sc,&found0);
+	printf("%d\n",int(sc));
+
+	//scs2e_c(-74999, SCLK, &et0);
+	scs2e_c(-94, SCLK, &et0);
+	//scs2e_c(sc, SCLK, &et0);
+	//LR = ( 74.0 + DLINE/16.0 )/1000000;
+	//LR = 7.03/double(LINE); //M01
+	LR = 7.78/double(LINE); //E02
 	et1 = et0 + LR*(BIN-TDI)/2;
 
-	printf("%s\n",out);
-	for(i=0;i<LINE;i++)//
-	{	
+	//SpiceChar  * centername="i am aaaa";
+	//printf("%s",centername);
+	//SpiceChar  * scname="bbbbb";
+	//SpiceChar  * iau= new char(30);
+	//strcpy(iau,centername);
+	//strcat(iau,scname);
+	//printf("%s",iau);
+	for(i=0;i<LINE;i++)
+	{
 		et = et1 + i*LR*BIN;
 
-		/*
-		SpiceBoolean found;
-		SpiceInt frcode, cent, frclss, clssid;
-		namfrm_c("J2000",&frcode);
-		frinfo_c ( frcode, &cent, &frclss, &clssid, &found ); 
-		printf("Type:%d\n",frclss);*/
+		//spkpos_c("MRO", et, "IAU_Mars", "CN+S", "MARS", pos, &lt);
+		//spkpos_c( "MARS", et, "IAU_Mars", "CN+S","MRO", pos, &lt);
+		spkpos_c( "MARS", et, "IAU_Mars", "CN+S","MGS", pos, &lt);
+		for(j=0; j<3; j++) pos[j] *= -1000;
 
-		//spkpos_c("MARS", et, "IAU_Mars", "CN+S", "MRO", pos, &lt);  
-		get_LineEle("MRO", "MARS", et, "IAU_Mars", 3, 1, pos);
+		pxform_c( "J2000", "IAU_MARS", et, R1 );
+		//pxform_c( "MRO_HIRISE_OPTICAL_AXIS", "J2000", et, R2 );
+		pxform_c( "MGS_SPACECRAFT", "J2000", et, R2 );
 
-		pxform_c( "J2000", "IAU_MARS", et, R1 );                   //v_mars=R1*v_j2000;  v--->vector
-		pxform_c( "MRO_HIRISE_OPTICAL_AXIS", "J2000", et, R2 );    //v_j2000=R2*v_MRO        ======>v_mars=R1*R2*v_MRO; ºóĞøµÃµ½Êı¾İÖ±½ÓÍ¬spice spk»ñÈ¡R2£¬R1ÓÉÌìÎÊ¹Û²âµÃµ½¡£
-
-		mxm_c( R1, R2, Rt ); //RtÎªMRO_HIRISE_OPTICAL_AXIS-->IAU£¬ºÍÉãÓ°²âÁ¿Ò»ÖÂ£¬ÎŞĞèÔÙ×ªÖÃ
+		mxm_c( R1, R2, Rt ); //Rtä¸ºMRO_HIRISE_OPTICAL_AXIS-->IAUï¼Œå’Œæ‘„å½±æµ‹é‡ä¸€è‡´ï¼Œæ— éœ€å†è½¬ç½®
 		for(j=0;j<3;j++)
 			for(k=0;k<3;k++)
 				R[j][k] = Rt[k][j];
@@ -121,12 +133,12 @@ void GetEO1( char * out, double et0, double DLINE, double BIN, double TDI, int L
 		fprintf(fout1, "%.12f\t%.12f\t%.12f\t%.12f\t%.12f\t%.12f\t%.12f\t%.12f\t%.12f\n",
 			R[0][0], R[0][1],  R[0][2], R[1][0], R[1][1], R[1][2], R[2][0], R[2][1], R[2][2] );
 	}
-	printf("¾àÀë³¤£º%lfkm\n",sqrt(pos[0]*pos[0]+pos[1]*pos[1]+pos[2]*pos[2]));
 	fclose(fout);
 	fclose(fout1);
 }
 
-void GetEO2(char * out, double et0, double DLINE, double BIN, double TDI, int LINE, int sample_rate)
+//è¾“å…¥ï¼šè¾“å‡ºè·¯å¾„ï¼›èµ·å§‹æ˜Ÿå†æ—¶é—´ï¼›TDIçº¿è·¯å»¶è¿Ÿï¼›çª—å£å¤§å°ï¼›TDIæ¨¡å¼ï¼ˆ8ï¼Œ32ï¼Œ64ï¼Œ128ï¼‰ï¼›é‡‡æ ·è¡Œæ•°
+bool EO::GetEO(char * out, double et0, double DLINE, double BIN, double TDI, int LINE, const int sample_rate=1)
 {
 	int i,j,k,found;
 	char utcstr[30];
@@ -143,13 +155,33 @@ void GetEO2(char * out, double et0, double DLINE, double BIN, double TDI, int LI
 		et = et1 + i*LR*BIN;
 
 		spkpos_c("MRO", et, "IAU_Mars", "CN+S", "MARS", pos, &lt);
+		if(consume_spice_error("GetEO/spkpos_c", out)){
+			fclose(fout);
+			remove(out); // é¿å…ç•™ä¸‹ä»…è¡¨å¤´çš„æ®‹ç¼º EOï¼Œå¯¼è‡´åç»­è¯¯åˆ¤â€œæ–‡ä»¶å­˜åœ¨â€
+			return false;
+		}
 		for(j=0; j<3; j++) pos[j] *= 1000;
 
 		pxform_c( "J2000", "IAU_MARS", et, R1 );
+		if(consume_spice_error("GetEO/pxform_c(J2000->IAU_MARS)", out)){
+			fclose(fout);
+			remove(out);
+			return false;
+		}
 		pxform_c( "MRO_HIRISE_OPTICAL_AXIS", "J2000", et, R2 );
-		mxm_c( R1, R2, Rt); //RtÎªMRO_HIRISE_OPTICAL_AXIS-->IAU£¬ºÍÉãÓ°²âÁ¿Ò»ÖÂ£¬ÎŞĞèÔÙ×ªÖÃ
+		if(consume_spice_error("GetEO/pxform_c(MRO_HIRISE_OPTICAL_AXIS->J2000)", out)){
+			fclose(fout);
+			remove(out);
+			return false;
+		}
+		mxm_c( R1, R2, Rt);             //Rtä¸ºMRO_HIRISE_OPTICAL_AXIS-->IAUï¼Œå’Œæ‘„å½±æµ‹é‡ä¸€è‡´ï¼Œæ— éœ€å†è½¬ç½®
 
-		pxform_c("MRO_HIRISE_OPTICAL_AXIS", "IAU_MARS", et, Rt );
+		pxform_c("MRO_HIRISE_OPTICAL_AXIS", "IAU_MARS", et, Rt);
+		if(consume_spice_error("GetEO/pxform_c(MRO_HIRISE_OPTICAL_AXIS->IAU_MARS)", out)){
+			fclose(fout);
+			remove(out);
+			return false;
+		}
 
 		for(j=0;j<3;j++){
 			int temp=abs(j-2);
@@ -159,23 +191,162 @@ void GetEO2(char * out, double et0, double DLINE, double BIN, double TDI, int LI
 			}
 		}
 		//R[j][k] = Rt[k][j];
-		m2eul_c( R, 2, 1, 3, &a3, &a2, &a1); //spice:ÀÛ¼ÆĞı×ªÊÇ×ó³Ë(yÖáÈ¡¸º)
+		Eigen::Matrix3d R_ei;
 		float * RR = new float[9];
+		R_ei << R[0][0],R[0][1],R[0][2],R[1][0],R[1][1],R[1][2],R[2][0],R[2][1],R[2][2];
+		//printf("%.3lf %.3lf %.3lf\n%.3lf %.3lf %.3lf\n%.3lf %.3lf %.3lf\n\n",R[0][0],R[0][1],R[0][2],R[1][0],R[1][1],R[1][2],R[2][0],R[2][1],R[2][2]);
+
+
+		//ç”¨å®ƒ
+		Eigen::Matrix<double,3,1> EulA = R_ei.eulerAngles(1,0,2);   //yxzå†…æ—‹ï¼Œå³æ‰‹ç³»ï¼Œç”¨eigenåˆ†è§£ï¼Œåˆæˆç”¨Eul2R_
+		a1=EulA[0];a2=EulA[1];a3=EulA[2];      //phi,w,k
 		Eul2R_(float(a3),float(a2),float(a1),RR);
+		//cout<<a1<<" "<<a2<<" "<<a3<<endl;
+		//printf("%.3f %.3f %.3f\n%.3f %.3f %.3f\n%.3f %.3f %.3f\n",RR[0],RR[1],RR[2],RR[3],RR[4],RR[5],RR[6],RR[7],RR[8]);
+
+
+
+		/*m2eul_c( R, 2, 1, 3, &a1, &a2, &a3);         //spice:ç´¯è®¡æ—‹è½¬æ˜¯å·¦ä¹˜(yè½´å–è´Ÿ) //spiceåˆ†è§£,å·¦æ‰‹ç³»,è°ƒç”¨Eul2R__åˆæˆ
+		Eul2R__(float(a3),float(a2),float(a1),RR);
+		cout<<a1<<" "<<a2<<" "<<a3<<endl;
+		printf("%.3f %.3f %.3f\n%.3f %.3f %.3f\n%.3f %.3f %.3f\n",RR[0],RR[1],RR[2],RR[3],RR[4],RR[5],RR[6],RR[7],RR[8]);//*/
+
+
+
+
+		/*R_ei=Eigen::AngleAxisd(EulA[0], Eigen::Vector3d::UnitZ()) *         //eigenåˆæˆ
+             Eigen::AngleAxisd(EulA[1], Eigen::Vector3d::UnitX()) *
+             Eigen::AngleAxisd(EulA[2], Eigen::Vector3d::UnitY());
+		printf("%.3f %.3f %.3f\n%.3f %.3f %.3f\n%.3f %.3f %.3f\n",RR[0],RR[1],RR[2],RR[3],RR[4],RR[5],RR[6],RR[7],RR[8]);//*/
 
  		fprintf(fout, "%.12f\t", et);
 		fprintf(fout, "%.12f\t%.12f\t%.12f\t", pos[0], pos[1], pos[2]);
-		fprintf(fout, "%.17f\t%.17f\t%.17f\n", a3, a2, a1);
-		//eul2m_c(a3,a2,a1,2,1,3,R);
-
-		//eul2m_c(7.326*pow(10.0,-6),-3.850*pow(10.0,-6),8.880*pow(10.0,-7),3,2,1,R);
+		fprintf(fout, "%.17f\t%.17f\t%.17f\n", a1, a2, a3);
 	}
 	fclose(fout);
+	return true;
 }
 
-//ÊäÈë£ºsclkch="4294967295.255";separator=":";base=19876.76;rate=0.02;
-//½«×Ö·û´®ÀàĞÍµÄº½ÌìÆ÷Ê±¼ä×ª»»ÎªË«¾«¶Èticks£¬ÔÙ×ª»»ÎªTDB±ê×¼ĞÇÀúÊ±¼ä¡£
-void sclkch2et(char* sclkch, double sclk0, char separator, double cons, double rate,double* et){
+//è¾“å…¥é…ç½®æ–‡ä»¶ï¼Œè¾“å‡ºå¤–æ–¹ä½å…ƒç´ åˆ°txt
+void EO::OutEO2txt(char *inputFile, char *kernelFile, const int dT){
+	int count, LINE;
+	char path[50],  name[50] , out[90], SCLK[50];
+	double DLINE,  BIN, TDI;
+
+	// é¿å… SPICE é»˜è®¤ ABORTï¼Œæ”¹ä¸ºå¯æ¢å¤é”™è¯¯å¹¶è¾“å‡ºè¯¦ç»†æ—¥å¿—ã€‚
+	erract_c("SET", 0, "RETURN");
+	errprt_c("SET", 0, "NONE");
+	reset_c();
+	kclear_c();
+
+	//é…ç½®æ ¸æ–‡ä»¶
+	furnsh_c(kernelFile);
+	if(consume_spice_error("OutEO2txt/furnsh_c", kernelFile)){
+		fprintf(stderr, "[SPICE][OutEO2txt] å†…æ ¸åŠ è½½å¤±è´¥ï¼Œå·²è·³è¿‡: %s\n", inputFile);
+		return;
+	}
+
+	//é€å½±åƒè¾“å‡ºå¤–æ–¹ä½å…ƒç´ åˆ°txt
+	FILE *fin = fopen(inputFile, "r" );
+	if(fin == NULL){
+		printf("æœªæ‰¾åˆ°EOè¾“å…¥æ–‡ä»¶ï¼š%s\n", inputFile);
+		kclear_c();
+		return;
+	}
+	fscanf( fin, "%d%s",  &count, path );
+	for(int i=0;i<count;i++)
+	{
+		fscanf( fin, "%s%s%lf%lf%lf%d", name, SCLK,  &DLINE,  &BIN,  &TDI,  &LINE);
+		sprintf( out, "%s%s%s", path, name, ".txt");
+
+		double et0;
+		//et0 = get_et0(SCLK);
+		scs2e_c( -74999, SCLK, &et0);
+
+		//æ ¹æ®et0å’Œçº¿æ‰«æé€Ÿåº¦è®¡ç®—æ¯è¡Œå¯¹åº”çš„æ˜Ÿå†æ—¶é—´å¹¶æ‰¾åˆ°å¯¹åº”çš„å¤–æ–¹ä½å…ƒç´ 
+		//GetEO( out, SCLK,  DLINE,  BIN, TDI, LINE );
+		if(!GetEO(out, et0,  DLINE,  BIN, TDI, LINE, dT)){
+			fprintf(stderr, "[SPICE][OutEO2txt] è®¡ç®—EOå¤±è´¥ï¼Œè¾“å…¥æ–‡ä»¶: %s\n", inputFile);
+			break;
+		}
+		//GetEO_(out,SCLK,DLINE,BIN,TDI,LINE);
+	}
+	fclose(fin);
+	kclear_c();
+}
+
+void EO::get_EO_main(){
+	int i, j, count, LINE;
+	char path[50],  name[50] , out[90], SCLK[50];
+	double DLINE,  BIN, TDI;
+	double et0=0;
+	char* utc;
+	double sclkdp0;
+
+	furnsh_c( "../data/EO/HiRISE1.txt" );
+
+	FILE *fin = fopen( "../data/EO/input1.txt", "r" );
+	fscanf( fin, "%d%s",  &count, path );
+
+	for(i=0;i<count;i++)
+	{
+		fscanf( fin, "%s%s%lf%lf%lf%d", name, SCLK,  &DLINE,  &BIN,  &TDI,  &LINE );
+		sprintf( out, "%s%s", path, name );
+
+		double et0;
+		et0 = get_et0(SCLK);
+
+		//æ ¹æ®et0å’Œçº¿æ‰«æé€Ÿåº¦è®¡ç®—æ¯è¡Œå¯¹åº”çš„æ˜Ÿå†æ—¶é—´å¹¶æ‰¾åˆ°å¯¹åº”çš„å¤–æ–¹ä½å…ƒç´ 
+		//GetEO( out, SCLK,  DLINE,  BIN, TDI, LINE );
+		if(!GetEO(out, et0,  DLINE,  BIN, TDI, LINE)){
+			fprintf(stderr, "[SPICE][get_EO_main] è®¡ç®—EOå¤±è´¥ï¼Œåœæ­¢ç»§ç»­å¤„ç†ã€‚\n");
+			break;
+		}
+	}
+	fclose(fin);
+}
+void EO::EO_poly_test(){
+	OutEO2txt("E:\\Mars_VS\\Mars../data/EO/input1.txt", "E:\\Mars_VS\\Mars../data/EO/HiRISE1.txt");
+}
+
+
+
+/********************************************************
+*	@brief       : é‡å†™spiceå‡½æ•°
+********************************************************/
+//æ¬§æ‹‰è§’è®¡ç®—æ—‹è½¬çŸ©é˜µ
+void EO::Eul2R_(float phi,float w,float k,float* R){
+	phi=-phi;
+	R[0]=cos(phi)*cos(k)-sin(phi)*sin(w)*sin(k);
+	R[1]=-cos(phi)*sin(k)-sin(phi)*sin(w)*cos(k);
+	R[2]=-sin(phi)*cos(w);
+	R[3]=cos(w)*sin(k);
+	R[4]=cos(w)*cos(k);
+	R[5]=-sin(w);
+	R[6]=sin(phi)*cos(k)+cos(phi)*sin(w)*sin(k);
+	R[7]=-sin(phi)*sin(k)+cos(phi)*sin(w)*cos(k);
+	R[8]=cos(phi)*cos(w);
+}
+
+void EO::Eul2R__(float phi,float w,float k,float* R){
+	R[0]=cos(phi)*cos(k)-sin(phi)*sin(w)*sin(k);
+	R[1]=-cos(phi)*sin(k)-sin(phi)*sin(w)*cos(k);
+	R[1]=-R[1];
+	R[2]=-sin(phi)*cos(w);
+	R[3]=cos(w)*sin(k);
+	R[3]=-R[3];
+	R[4]=cos(w)*cos(k);
+	R[5]=-sin(w);
+	R[5]=-R[5];
+	R[6]=sin(phi)*cos(k)+cos(phi)*sin(w)*sin(k);
+	R[7]=-sin(phi)*sin(k)+cos(phi)*sin(w)*cos(k);
+	R[7]=-R[7];
+	R[8]=cos(phi)*cos(w);
+}
+
+//è¾“å…¥ï¼šsclkch="4294967295.255";separator=":";base=19876.76;rate=0.02;
+//å°†å­—ç¬¦ä¸²ç±»å‹çš„èˆªå¤©å™¨æ—¶é—´è½¬æ¢ä¸ºåŒç²¾åº¦ticksï¼Œå†è½¬æ¢ä¸ºTDBæ ‡å‡†æ˜Ÿå†æ—¶é—´ã€‚
+void EO::sclkch2et(char* sclkch, double sclk0, char separator, double cons, double rate,double* et){
 	double sclkdp;
 	//sclkch-->sclkdp
 	double uniticks = 65536;
@@ -186,30 +357,30 @@ void sclkch2et(char* sclkch, double sclk0, char separator, double cons, double r
 }
 
 //sclkch-->sclkdp
-void sclkch2sclkdp(char* sclkch, char separator, double uniticks, double* sclkdp){
-	char *revbuf[2]; //´æ·Å·Ö¸îºóµÄ×Ó×Ö·û´® 
+void EO::sclkch2sclkdp(char* sclkch, char separator, double uniticks, double* sclkdp){
+	char *revbuf[2]; //å­˜æ”¾åˆ†å‰²åçš„å­å­—ç¬¦ä¸² 
 	int num=0;
 
-	//printf("×Ö·û´®Îª£º%s\n",sclkch);
-	//sclkchÎªchar*µÄ×Ö·û´®£¬¿ÉÒÔ½«vectorÏÈ×ªÎªchar*£¬¾ßÌå²Ù×÷£ºÏÈ»ñÈ¡vector³¤¶Èl£¬È»ºóchar* sclkch=new char[l];ÔÙforÑ­»·¸³Öµ¡£
-	//separatorÎª·Ö¸î×Ö·û£¬ÕâÀïÎª¿Õ¸ñ:' '
-	//revbuf´æ·Å·Ö¸îºóµÄ×Ó×Ö·û´®,ĞèÒªÌáÇ°¶¨Òå³¤¶È£ºchar *revbuf[100];
-	//numÖ±½Ó¶¨ÒåÊä½øÈ¥¾ÍºÃ£ºint num=0£»
-	split(sclkch,separator,revbuf, &num); //µ÷ÓÃº¯Êı½øĞĞ·Ö¸î
+	//printf("å­—ç¬¦ä¸²ä¸ºï¼š%s\n",sclkch);
+	//sclkchä¸ºchar*çš„å­—ç¬¦ä¸²ï¼Œå¯ä»¥å°†vectorå…ˆè½¬ä¸ºchar*ï¼Œå…·ä½“æ“ä½œï¼šå…ˆè·å–vectoré•¿åº¦lï¼Œç„¶åchar* sclkch=new char[l];å†forå¾ªç¯èµ‹å€¼ã€‚
+	//separatorä¸ºåˆ†å‰²å­—ç¬¦ï¼Œè¿™é‡Œä¸ºç©ºæ ¼:' '
+	//revbufå­˜æ”¾åˆ†å‰²åçš„å­å­—ç¬¦ä¸²,éœ€è¦æå‰å®šä¹‰é•¿åº¦ï¼šchar *revbuf[100];
+	//numç›´æ¥å®šä¹‰è¾“è¿›å»å°±å¥½ï¼šint num=0ï¼›
+	split(sclkch,separator,revbuf, &num); //è°ƒç”¨å‡½æ•°è¿›è¡Œåˆ†å‰²
 
 	double ticks = atof(revbuf[0])*uniticks + atoi(revbuf[1]);
-	//printf("SCLK¶ÔÓ¦µÄticks£º%lf\n",ticks);
+	//printf("SCLKå¯¹åº”çš„ticksï¼š%lf\n",ticks);
 
 	*sclkdp=ticks;
 }
 
 //sclkdh-->et
-void sclkdp2et(double sclkdp,double sclk0, double cons, double rate,double* et){
+void EO::sclkdp2et(double sclkdp,double sclk0, double cons, double rate,double* et){
 	*et = cons + rate/65536*(sclkdp-sclk0);
 }
 
-//¼õÈ¥·ÖÇø¼ä¶àÓàticks
-void get_truesclkdp(double ticks, int nparts, double *pstart, double *pstop, double *sclkdp){
+//å‡å»åˆ†åŒºé—´å¤šä½™ticks
+void EO::get_truesclkdp(double ticks, int nparts, double *pstart, double *pstop, double *sclkdp){
 	int i__, i__1, i__2, i__3, i__4, i__5;
 	i__1 = nparts;
 
@@ -217,7 +388,7 @@ void get_truesclkdp(double ticks, int nparts, double *pstart, double *pstop, dou
 	for (i__ = 1; i__ <= i__1; ++i__) {
 		pstop[(i__2 = i__ - 1)]                 //pstop[(i__2 = i__ - 1)]
 		= 
-			double(floor(pstop[(i__3 = i__ - 1)]+0.5));    //d_nint(&pstop[(i__3 = i__ -  1)])                                          //¶ÔÃ¿¸ö¿ªÊ¼½áÊøµãµÎ´ğ½øĞĞËÄÉáÎåÈë
+			double(floor(pstop[(i__3 = i__ - 1)]+0.5));    //d_nint(&pstop[(i__3 = i__ -  1)])                                          //å¯¹æ¯ä¸ªå¼€å§‹ç»“æŸç‚¹æ»´ç­”è¿›è¡Œå››èˆäº”å…¥
 
 		pstart[(i__2 = i__ - 1)]               //pstart[(i__2 = i__ - 1)]
 		= 
@@ -227,12 +398,12 @@ void get_truesclkdp(double ticks, int nparts, double *pstart, double *pstop, dou
 	/* For each partition, compute the total number of ticks in that partition plus all preceding partitions. */
 
 	double d__1 = pstop[0] - pstart[0];
-	ptotls[0] = floor(d__1+0.5);            //ËÄÉáÎåÈëº¯Êı
+	ptotls[0] = floor(d__1+0.5);            //å››èˆäº”å…¥å‡½æ•°
 	i__1 = nparts;
 	for (i__ = 2; i__ <= i__1; ++i__) {
 		d__1 = ptotls[(i__3 = i__ - 2)] 
 		+ pstop[(i__4 = i__ - 1)] 
-		- pstart[(i__5 = i__ - 1)];          //°Ñ¸÷·ÖÇøÖĞ¼ä¿ÕµÄÊ±¼ä³ıÈ¥£¬Ëã³öµ½Ã¿¸ö·ÖÇøµÄ×Üticks
+		- pstart[(i__5 = i__ - 1)];          //æŠŠå„åˆ†åŒºä¸­é—´ç©ºçš„æ—¶é—´é™¤å»ï¼Œç®—å‡ºåˆ°æ¯ä¸ªåˆ†åŒºçš„æ€»ticks
 		//printf("i_3:%d       i_4:%d        d_1:%lf\n",i__3,i__4,floor(d__1+0.5));
 		ptotls[(i__2 = i__ - 1)] 
 		= floor(d__1+0.5);
@@ -254,7 +425,7 @@ void get_truesclkdp(double ticks, int nparts, double *pstart, double *pstop, dou
 	}
 }
 
-double get_truesclkdp1(double ticks, int nparts, double *pstart, double *pstop){
+double EO::get_truesclkdp(double ticks, int nparts, double *pstart, double *pstop){
 	double sclkdp=0;
 	int i__, i__1, i__2, i__3, i__4, i__5;
 	i__1 = nparts;
@@ -263,7 +434,7 @@ double get_truesclkdp1(double ticks, int nparts, double *pstart, double *pstop){
 	for (i__ = 1; i__ <= i__1; ++i__) {
 		pstop[(i__2 = i__ - 1)]                 //pstop[(i__2 = i__ - 1)]
 		= 
-			double(floor(pstop[(i__3 = i__ - 1)]+0.5));    //d_nint(&pstop[(i__3 = i__ -  1)])                                          //¶ÔÃ¿¸ö¿ªÊ¼½áÊøµãµÎ´ğ½øĞĞËÄÉáÎåÈë
+			double(floor(pstop[(i__3 = i__ - 1)]+0.5));    //d_nint(&pstop[(i__3 = i__ -  1)])                                          //å¯¹æ¯ä¸ªå¼€å§‹ç»“æŸç‚¹æ»´ç­”è¿›è¡Œå››èˆäº”å…¥
 
 		pstart[(i__2 = i__ - 1)]               //pstart[(i__2 = i__ - 1)]
 		= 
@@ -273,12 +444,12 @@ double get_truesclkdp1(double ticks, int nparts, double *pstart, double *pstop){
 	/* For each partition, compute the total number of ticks in that partition plus all preceding partitions. */
 
 	double d__1 = pstop[0] - pstart[0];
-	ptotls[0] = floor(d__1+0.5);            //ËÄÉáÎåÈëº¯Êı
+	ptotls[0] = floor(d__1+0.5);            //å››èˆäº”å…¥å‡½æ•°
 	i__1 = nparts;
 	for (i__ = 2; i__ <= i__1; ++i__) {
 		d__1 = ptotls[(i__3 = i__ - 2)] 
 		+ pstop[(i__4 = i__ - 1)] 
-		- pstart[(i__5 = i__ - 1)];          //°Ñ¸÷·ÖÇøÖĞ¼ä¿ÕµÄÊ±¼ä³ıÈ¥£¬Ëã³öµ½Ã¿¸ö·ÖÇøµÄ×Üticks
+		- pstart[(i__5 = i__ - 1)];          //æŠŠå„åˆ†åŒºä¸­é—´ç©ºçš„æ—¶é—´é™¤å»ï¼Œç®—å‡ºåˆ°æ¯ä¸ªåˆ†åŒºçš„æ€»ticks
 
 		ptotls[(i__2 = i__ - 1)] = floor(d__1 + 0.5);
 	}
@@ -300,22 +471,21 @@ double get_truesclkdp1(double ticks, int nparts, double *pstart, double *pstop){
 	return sclkdp;
 }
 
-//TDT×ªTDB
-void TDT2TDB(double TDT, double K, double EB, double *M, double *TDB){
+//TDTè½¬TDB
+void EO::TDT2TDB(double TDT, double K, double EB, double *M, double *TDB){
 	double t = TDT;
 	double m = M[0]+M[1]*t;
 	*TDB = t + K * sin(m + EB * sin(m));
 }
 
-
-//»ñÈ¡Ö¸¶¨Ê±¿Ì£¬ÎïÌå£¨·ÉĞĞÆ÷»òĞÇÌå£©ÔÚJ2000×ø±êÏµÏÂÏà¶ÔÓÚSSBµÄÎ»ÖÃÊ¸Á¿¡£
-void get_pos(char* obs, double et, double* pos){
+//è·å–æŒ‡å®šæ—¶åˆ»ï¼Œç‰©ä½“ï¼ˆé£è¡Œå™¨æˆ–æ˜Ÿä½“ï¼‰åœ¨J2000åæ ‡ç³»ä¸‹ç›¸å¯¹äºSSBçš„ä½ç½®çŸ¢é‡ã€‚
+void EO::get_pos(char* obs, double et, double* pos){
 	double lt=0;
 	spkpos_c(obs, et, "J2000", "NONE", "SSB", pos, &lt);
 }
 
-//»ñÈ¡J2000ÏÂÖ¸¶¨Ê±¿ÌµÄº½ÌìÆ÷ËÙ¶È
-void get_v(char* obs, double et, double* v){
+//è·å–J2000ä¸‹æŒ‡å®šæ—¶åˆ»çš„èˆªå¤©å™¨é€Ÿåº¦
+void EO::get_v(char* obs, double et, double* v){
 	SpiceBoolean found;
 	SpiceInt code;
 
@@ -323,18 +493,17 @@ void get_v(char* obs, double et, double* v){
 	spkssb_c ( code, et, "J2000", v ); 
 }
 
-
-//ÇóetÊ±¿ÌµÄÏßÔªËØ£º°üÀ¨µ¥Ïò¹âÊ±¼äĞ£Õı¡¢ºãĞÇÏñ²îĞ£Õı
-void get_LineEle(char* obs, char* targ, double et, char* frame, int iters, int IsSac, double* pos){
+//æ±‚etæ—¶åˆ»çš„çº¿å…ƒç´ ï¼šåŒ…æ‹¬å•å‘å…‰æ—¶é—´æ ¡æ­£ã€æ’æ˜Ÿåƒå·®æ ¡æ­£
+void EO::get_LineEle(char* obs, char* targ, double et, char* frame, int iters, int IsSac, double* pos){
 	double *pos1,*pos2;
 	pos1 = new double[3];
 	pos2 = new double[3];
 	get_pos(obs, et, pos1);
 	get_pos(targ, et, pos2);
 
-	//µ¥Ïò¹âÊ±¼äĞ£Õı
+	//å•å‘å…‰æ—¶é—´æ ¡æ­£
 	double lt=0;
-	double clight = 2.99792458E+05;   //¹âËÙkm/s
+	double clight = 2.99792458E+05;   //å…‰é€Ÿkm/s
 	for(int i=0; i<iters; i++){
 		lt=sqrt((pos2[0]-pos1[0])*(pos2[0]-pos1[0])+(pos2[1]-pos1[1])*(pos2[1]-pos1[1])+(pos2[2]-pos1[2])*(pos2[2]-pos1[2]))/clight;
 		get_pos(targ, et-lt, pos2);
@@ -343,33 +512,33 @@ void get_LineEle(char* obs, char* targ, double et, char* frame, int iters, int I
 	double ptarg[3];
 	for(int j=0; j<3; j++){ 
 		ptarg[j] =pos2[j]-pos1[j];
-		ptarg[j] *= -1000; //mÎªµ¥Î»
+		ptarg[j] *= -1000; //mä¸ºå•ä½
 	}
 	clight *= 1000;
 
 	double *vv = new double[3];
-	//ºãĞÇÏñ²îĞ£Õı
+	//æ’æ˜Ÿåƒå·®æ ¡æ­£
 	double appobj[3];
 	if(IsSac==1){
 		get_v(obs, et, vv);
 		//v[0]=0;v[1]=0;v[2]=0;
-		vv[0]=vv[0]/clight;vv[1]=vv[1]/clight;vv[2]=vv[2]/clight;      //¹âËÙ¹éÒ»»¯
+		vv[0]=vv[0]/clight;vv[1]=vv[1]/clight;vv[2]=vv[2]/clight;      //å…‰é€Ÿå½’ä¸€åŒ–
 		//printf("v[2]=%lf\n",v[2]);
 		double len = sqrt(ptarg[0]*ptarg[0] + ptarg[1]*ptarg[1] + ptarg[2]*ptarg[2]);
-		double r[3]={ptarg[0]/len,ptarg[1]/len,ptarg[2]/len};    //µ¥Î»ÏòÁ¿
+		double r[3]={ptarg[0]/len,ptarg[1]/len,ptarg[2]/len};    //å•ä½å‘é‡
 		//printf("r[2]=%lf\n",r[2]);
 		double h[3];
-		vcrss_c(r, vv, h);                   //Çó²æ»ı£ºh=r¡Áv£¬spiceº¯Êı
+		vcrss_c(r, vv, h);                   //æ±‚å‰ç§¯ï¼šh=rÃ—vï¼Œspiceå‡½æ•°
 		double sinphi = sqrt(h[0]*h[0] + h[1]*h[1] + h[2]*h[2]);
 		//printf("h[2]=%lf\n",h[2]);
 		SpiceDouble phi = asin(sinphi);
-		vrotv_c(ptarg, h, phi, appobj);    //ptargÈÆhĞı×ªphi£¬spiceº¯Êı
+		vrotv_c(ptarg, h, phi, appobj);    //ptargç»•hæ—‹è½¬phiï¼Œspiceå‡½æ•°
 	}
 	else{
 		appobj[0]=ptarg[0];appobj[1]=ptarg[1];appobj[2]=ptarg[2];
 	}
 
-	//´Ój2000Ğı×ªµ½¶ÔÓ¦×ø±êÏµ
+	//ä»j2000æ—‹è½¬åˆ°å¯¹åº”åæ ‡ç³»
 	double R1[3][3];
 	pxform_c( "J2000", frame, et-lt, R1 ); 
 	//pos = new double[3];
@@ -377,34 +546,34 @@ void get_LineEle(char* obs, char* targ, double et, char* frame, int iters, int I
 	pos;
 }
 
-//»ñÈ¡ÆğÊ¼ĞÇÀúÊ±¼ä
-double get_et0(char* SCLK){
-	//Çó½â³õÊ¼Ê±¿Ì¶ÔÓ¦µÄTDBĞÇÀúÊ±¼ä£ºet0
+//è·å–èµ·å§‹æ˜Ÿå†æ—¶é—´
+double EO::get_et0(char* SCLK){
+	//æ±‚è§£åˆå§‹æ—¶åˆ»å¯¹åº”çš„TDBæ˜Ÿå†æ—¶é—´ï¼šet0
 	double sclkdp=0;double et0=0;double sclkdp0=0;
 
 	/***************************************************************
-	//spiceº¯ÊıÇó½â
+	//spiceå‡½æ•°æ±‚è§£
 
 	scencd_c(-74999, SCLK, &sclkdp0 );
-	printf("spiceº¯Êı×ª»»sclkdp£º%lf\n",sclkdp0);
+	printf("spiceå‡½æ•°è½¬æ¢sclkdpï¼š%lf\n",sclkdp0);
 	scs2e_c(-74999, SCLK, &et0);
-	printf("spiceº¯Êı×ª»»et0½á¹ûÎª£º%lf\n", et0);           //spiceº¯Êı½á¹û
+	printf("spiceå‡½æ•°è½¬æ¢et0ç»“æœä¸ºï¼š%lf\n", et0);           //spiceå‡½æ•°ç»“æœ
 	**************************************************************/
 
-	//×Ô±àº¯ÊıÇó½â
-	sclkch2sclkdp(SCLK, ':', 65536, &sclkdp);  //·Ö¸î×Ö·û´®£¬Çó½â³õÊ¼ticks
-	printf("×Ô±àº¯Êı×ª»»ticks£º%lf\n",sclkdp);
+	//è‡ªç¼–å‡½æ•°æ±‚è§£
+	sclkch2sclkdp(SCLK, ':', 65536, &sclkdp);  //åˆ†å‰²å­—ç¬¦ä¸²ï¼Œæ±‚è§£åˆå§‹ticks
+	printf("è‡ªç¼–å‡½æ•°è½¬æ¢ticksï¼š%lf\n",sclkdp);
 
 	int nparts=19;
 	double *pstart = new double[19];
-	double *pstop = new double[19];     //´æ´¢sclk¸÷·ÖÇøticks
+	double *pstop = new double[19];     //å­˜å‚¨sclkå„åˆ†åŒºticks
 
 	int count=0;
 	char* a = new char[30];
 	char *b[2];
 	int num=2;
 
-	FILE * fp1=fopen("E:\\Mars_KF\\data\\jz_coef\\pstart.txt","r");
+	FILE * fp1=fopen("E:\\Mars_KF../data/jz_coef\\pstart.txt","r");
 	while( fscanf(fp1, "%s\n", a ) == 1 )
 	{
 		split(a,'E',b,&num);
@@ -415,7 +584,7 @@ double get_et0(char* SCLK){
 	fclose(fp1);
 
 	count=0;
-	FILE * fp2=fopen("E:\\Mars_KF\\data\\jz_coef\\pstop.txt","r");
+	FILE * fp2=fopen("E:\\Mars_KF../data/jz_coef\\pstop.txt","r");
 	while( fscanf(fp2, "%s\n", a ) == 1 )
 	{
 		split(a,'E',b,&num);
@@ -426,86 +595,78 @@ double get_et0(char* SCLK){
 	fclose(fp2);
 
 	double sclkdp1=0;
-	sclkdp1 = get_truesclkdp1(sclkdp, nparts, pstart, pstop);
-	printf("×Ô±àº¯Êı×ª»»sclkdp£º%lf\n",sclkdp1);  
+	sclkdp1 = get_truesclkdp(sclkdp, nparts, pstart, pstop);
+	printf("è‡ªç¼–å‡½æ•°è½¬æ¢sclkdpï¼š%lf\n",sclkdp1);  
 	double coef[3]={7.9410475499462E+13, 5.8051252123000E+08, 9.9999988100041E-01};   //start_ticks;cons;rate
-	sclkdp2et(sclkdp1, coef[0], coef[1], coef[2], &et0);       //sclkdp×ªTDT£¨MROÄ¬ÈÏ²¢ĞĞÊ±¼äÏµÍ³TDT£©
+	sclkdp2et(sclkdp1, coef[0], coef[1], coef[2], &et0);       //sclkdpè½¬TDTï¼ˆMROé»˜è®¤å¹¶è¡Œæ—¶é—´ç³»ç»ŸTDTï¼‰
 	double TDT = et0;
-	//TDB = unitim_c ( TDT, "TDT", "ET" );                     //spiceº¯ÊıTDT×ªTDB
+	//TDB = unitim_c ( TDT, "TDT", "ET" );                     //spiceå‡½æ•°TDTè½¬TDB
 
 	double TDB=0;
 	double DELTA_T_A = 32.184; double K = 1.657E-3; double EB = 1.671E-2; double M[2] = {6.239996E0, 1.99096871E-7};
-	TDT2TDB(TDT, K, EB, M, &TDB);                              //×Ô±àº¯ÊıTDT×ªTDB
-	printf("×Ô±àº¯Êı×ª»»et0Îª£º%lf\n",TDB);
+	TDT2TDB(TDT, K, EB, M, &TDB);                              //è‡ªç¼–å‡½æ•°TDTè½¬TDB
+	printf("è‡ªç¼–å‡½æ•°è½¬æ¢et0ä¸ºï¼š%lf\n",TDB);
 	et0=TDB;
 
 	return et0;
 }
 
-void get_EO_main(){
-	int i, j, count, LINE;
-	char path[50],  name[50] , out[90], SCLK[50];
-	double DLINE,  BIN, TDI;
-	double et0=0;
-	char* utc;
-	double sclkdp0;
 
-	furnsh_c( "../data/EO/HiRISE1.txt" );
 
-	FILE *fin = fopen( "../data/EO/input1.txt", "r" );
-	fscanf( fin, "%d%s",  &count, path );
 
-	for(i=0;i<count;i++)
-	{
-		fscanf( fin, "%s%s%lf%lf%lf%d", name, SCLK,  &DLINE,  &BIN,  &TDI,  &LINE );
-		sprintf( out, "%s%s", path, name );
+/********************************************************
+*	@brief       : baseå‡½æ•°
+********************************************************/
+void EO::split(char *src,char separator,char** dest,int *num) {
+	/*
+	src æºå­—ç¬¦ä¸²çš„é¦–åœ°å€(bufçš„åœ°å€) 
+	separator æŒ‡å®šçš„åˆ†å‰²å­—ç¬¦
+	dest æ¥æ”¶å­å­—ç¬¦ä¸²çš„æ•°ç»„
+	num åˆ†å‰²åå­å­—ç¬¦ä¸²çš„ä¸ªæ•°
+	*/
 
-		double et0;
-		et0 = get_et0(SCLK);
-
-		//¸ù¾İet0ºÍÏßÉ¨ÃèËÙ¶È¼ÆËãÃ¿ĞĞ¶ÔÓ¦µÄĞÇÀúÊ±¼ä²¢ÕÒµ½¶ÔÓ¦µÄÍâ·½Î»ÔªËØ
-		//GetEO( out, SCLK,  DLINE,  BIN, TDI, LINE );
-		GetEO1( out, et0,  DLINE,  BIN, TDI, LINE );
+	char *pNext;
+	int count = 0;
+	if (src == NULL || strlen(src) == 0){ //å¦‚æœä¼ å…¥çš„åœ°å€ä¸ºç©ºæˆ–é•¿åº¦ä¸º0ï¼Œç›´æ¥ç»ˆæ­¢ 
+		return;
 	}
-	fclose(fin);
-}
 
-
-//ÊäÈëÅäÖÃÎÄ¼ş£¬Êä³öÍâ·½Î»ÔªËØµ½txt
-void OutEO2txt(char *inputFile, char *kernelFile){
-	int count, LINE;
-	char path[50],  name[50] , out[90], SCLK[50];
-	double DLINE,  BIN, TDI;
-
-	//ÅäÖÃºËÎÄ¼ş
-	furnsh_c(kernelFile);
-
-	//ÖğÓ°ÏñÊä³öÍâ·½Î»ÔªËØµ½txt
-	FILE *fin = fopen(inputFile, "r" );
-	fscanf( fin, "%d%s",  &count, path );
-	for(int i=0;i<count;i++)
-	{
-		fscanf( fin, "%s%s%lf%lf%lf%d", name, SCLK,  &DLINE,  &BIN,  &TDI,  &LINE );
-		sprintf( out, "%s%s%s", path, name, ".txt");
-
-		double et0;
-		//et0 = get_et0(SCLK);
-		scs2e_c( -74999, SCLK, &et0);
-
-		//¸ù¾İet0ºÍÏßÉ¨ÃèËÙ¶È¼ÆËãÃ¿ĞĞ¶ÔÓ¦µÄĞÇÀúÊ±¼ä²¢ÕÒµ½¶ÔÓ¦µÄÍâ·½Î»ÔªËØ
-		//GetEO( out, SCLK,  DLINE,  BIN, TDI, LINE );
-		GetEO2(out, et0,  DLINE,  BIN, TDI, LINE, 500);
+	char* p=src;
+	int i = 0, j = 0;    
+	char tmp[32][32] = {0};    
+	char *p1 = (char *)malloc(1024); 
+	while((p1 = strchr(p, separator)) != NULL)    
+	{        
+		strncpy(tmp[i], p, strlen(p) - strlen(p1));       
+		p = p1 + 1;        
+		i++;    
+	}    
+	strncpy(tmp[i], p, strlen(p)); 
+	for(j = 0; j <= i; j++){ 
+		dest[j]=tmp[j];
+		//printf("temp[%d] = %s\n", j, dest[j]);
 	}
-	fclose(fin);
+	*num = i+1;
+	//printf("åˆ†å‰²åå­—ç¬¦ä¸²ä¸ªæ•°ï¼š%d\n",*num);
+} 	
+void EO::mxm(double *m1, double *m2, double *re){
+	int i__1, i__2, i__3, i__4, i__5, i__6, i__7;
+	int i__, j;
+	double prodm[9];
+	for (i__ = 1; i__ <= 3; ++i__) { //è¡Œ
+		for (j = 1; j <= 3; ++j) { //åˆ—
+			re[(i__1 = j + i__ * 3 - 4) ] = m1[(i__2 = i__ * 3 - 3)] * m2[(i__3 = j - 1)]
+			+ m1[(i__4 = i__ * 3 - 2)] * m2[(i__5 = j + 2)] 
+			+ m1[(i__6 = i__ * 3 - 1)] * m2[(i__7 = j + 5)];
+		}
+	}
 }
-
-
-
-void EO_poly_test(){
-	OutEO2txt("E:\\Mars_VS\\Mars\\data\\EO\\input1.txt", "E:\\Mars_VS\\Mars\\data\\EO\\HiRISE1.txt");
-	//double* Poly_C = new double[18];
-	//Polynomial3_EO("E:\\Mars\\EO\\ESP_055528_1610_RED3_0.txt",Poly_C);
+void EO::m2v(double **m1, int rows, int cols, double *m2){
+	for(int i=0;i<rows;i++){
+		for(int j=0;j<cols;j++){
+			m2[i*rows+j]=m1[i][j];
+		}
+	}
 }
-
 
 

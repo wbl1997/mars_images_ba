@@ -1,0 +1,149 @@
+# dataset:
+#   srcfilepath: "/media/wbl/ZX2_WBL/data/Mars/祝融号着陆区/"
+#   filepath: "/media/wbl/Elements/paper_experiments/Mars/new"
+#   xulie_ID1: "ESP_069731_2055"
+#   xulie_ID2: "ESP_075559_2055"
+#   rows1: 55000
+#   rows2: 40000
+#   cols: 2048
+#   CCD_num: 10
+
+# dataset:
+#   srcfilepath: "/media/wbl/ZX2_WBL/data/Mars/祝融号着陆区/"
+#   filepath: "/media/wbl/KESU/硕士相关材料/MARS_zl/代码/重建/data/new"
+#   xulie_ID1: "PSP_001777_1650"
+#   xulie_ID2: "PSP_001513_1655"
+#   rows1: 40000
+#   rows2: 80000
+#   cols: 2048
+#   CCD_num: 10
+
+# dataset:
+#   srcfilepath: "/media/wbl/ZX2_WBL/data/Mars/祝融号着陆区/"
+#   filepath: "/media/wbl/Elements/paper_experiments/Mars/new"
+#   xulie_ID1: "PSP_008469_2040"
+#   xulie_ID2: "PSP_008825_2040"
+#   rows1: 80000
+#   rows2: 100000
+#   cols: 2048
+#   CCD_num: 10
+
+dataset:
+  srcfilepath: "/media/wbl/ZX2_WBL/data/Mars/祝融号着陆区/"
+  filepath: "/media/wbl/Elements/paper_experiments/Mars/new"
+  xulie_ID1: "ESP_075625_2055"
+  xulie_ID2: "ESP_075559_2055"
+  rows1: 45000
+  rows2: 40000
+  cols: 2048
+  CCD_num: 9
+  CCD_begin: 0
+  CCD_end: -1
+
+# Full run: pyramid feature matching + Fea IR + grid matching + inter-CCD + BA
+# (non-dataset params aligned with cfg_PSP_009149_1750_PSP_009294_1750.yaml)
+steps:
+  preprocess: false
+  intra_ccd_mosaic: false
+  downsample: false
+  feature_mosaic: false
+  feature_extract: false
+  feature_match: true
+  grid_match: true
+  inter_ccd_match: true
+  ba: true
+
+mosaic:
+  overlap_samples: 48
+
+feature_extract:
+  channel: 6
+  localmax_win: [64, 51, 51, 31, 15]
+
+feature_match:
+  # --- 1) fenfu_match ---
+  pyramid_open: true
+  coarse_window_size: 15
+  guided_window_factor: 6
+  final_layer_window_size: 15
+  search_range_factor: 150
+  coarse_cc_threshold: 0.5
+  guided_cc_threshold: 0.5
+  final_layer_cc_threshold: 0.5
+  ransac_sigma_factor: 5
+  ransac_iterations: 150000
+  use_robust_scoreb: false
+  use_affine_patch_score: false
+  # use_local_affine=false 时：相对全局仿射的 keep（绿）门限
+  # keep = √(vx²+vy²)<radius 且 |vx|,|vy|<abs
+  global_keep_radius: 1000.0
+  global_keep_abs: 400.0
+  use_local_affine: true
+  local_tiles_r: 30
+  local_tiles_c: 10
+  local_affine_sigma: 80.0
+  local_min_points: 10
+  local_keep_score_min: 0.5
+  # --- 2) densify_grid ---
+  densify_grid: false
+  densify_batch_r: 64
+  densify_batch_c: 64
+  densify_window_size: 15
+  densify_search_range: 28
+  densify_cc_threshold: 0.50
+  densify_knn: 8
+  # --- 3) iterative_refinement (Fea IR / limit_fea) ---
+  iterative_refinement_iterations: 0
+  iterative_window_size: 15
+  iterative_search_range: 64
+  iterative_cc_threshold: 0.55
+  lambda2: 0.05
+  iterative_seed_radius: 1000
+  iterative_seed_min: 3
+
+grid_match:
+  refinement_iterations: 2
+  batch_size: 48
+  window_size: 15
+  search_range: 80
+  cc_threshold: 0.55
+  use_robust_scoreb: false
+  use_affine_patch_score: false
+  use_neighbor_affine: false
+  lambda2: 0.1
+  affine_max_dev: 512
+  affine_pred_as_match: false
+  followup_window_size: 15
+  followup_search_range: 10
+  followup_cc_threshold: 0.55
+
+inter_ccd_match:
+  intra_window_size: 15
+  intra_search_range: 80
+  intra_batch_size_r: 10
+  intra_batch_size_c: 48
+  intra_cc_threshold: 0.5
+  cross_window_size: 15
+  cross_search_range: 80
+  cross_cc_threshold: 0.65
+  use_robust_scoreb: false
+  use_affine_patch_score: true
+  control_source: grid
+  run_global_refine: false
+
+ba:
+  tichu_affine_max_residual: 1000.0   # sqrt(vx²+vy²)
+  tichu_affine_max_vx: 300.0         # |vx|
+  tichu_affine_max_vy: 300.0         # |vy|
+  tichu_local_radius: 1000.0          # 局部邻域半径
+  tichu_sigma_factor: 10.0            # 局部视差 nσ
+
+  fi_source: grid          # feature | grid —— FI 用特征匹配还是格网匹配
+  run_feature_ba: true     # 是否先做特征点 BA 更新 EO
+  use_jitter: true         # true=优先 Jitter（失败回退 Block）；false=直接 Block
+  block_max_iterations: 100
+  jitter_max_iterations: 50
+  fi_max_iterations: 10
+  cauchy_loss_ba: 1.0
+  cauchy_loss_fi: 0.5
+  function_tolerance: 1.0e-10

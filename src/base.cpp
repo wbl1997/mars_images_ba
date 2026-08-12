@@ -1,16 +1,21 @@
 #include "base.h"
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
 
 void split(char *src,char separator,char** dest,int *num) {
 	/*
-	src Ô´×Ö·û´®µÄÊ×µØÖ·(bufµÄµØÖ·) 
-	separator Ö¸¶¨µÄ·Ö¸î×Ö·û
-	dest ½ÓÊÕ×Ó×Ö·û´®µÄÊı×é
-	num ·Ö¸îºó×Ó×Ö·û´®µÄ¸öÊı
+	src æºå­—ç¬¦ä¸²çš„é¦–åœ°å€(bufçš„åœ°å€) 
+	separator æŒ‡å®šçš„åˆ†å‰²å­—ç¬¦
+	dest æ¥æ”¶å­å­—ç¬¦ä¸²çš„æ•°ç»„
+	num åˆ†å‰²åå­å­—ç¬¦ä¸²çš„ä¸ªæ•°
 	*/
 
 	char *pNext;
 	int count = 0;
-	if (src == NULL || strlen(src) == 0){ //Èç¹û´«ÈëµÄµØÖ·Îª¿Õ»ò³¤¶ÈÎª0£¬Ö±½ÓÖÕÖ¹ 
+	if (src == NULL || strlen(src) == 0){ //å¦‚æœä¼ å…¥çš„åœ°å€ä¸ºç©ºæˆ–é•¿åº¦ä¸º0ï¼Œç›´æ¥ç»ˆæ­¢ 
 	    return;
 	}
 
@@ -30,15 +35,15 @@ void split(char *src,char separator,char** dest,int *num) {
 	    //printf("temp[%d] = %s\n", j, dest[j]);
 	}
 	*num = i+1;
-	//printf("·Ö¸îºó×Ö·û´®¸öÊı£º%d\n",*num);
+	//printf("åˆ†å‰²åå­—ç¬¦ä¸²ä¸ªæ•°ï¼š%d\n",*num);
 } 	
 
 void mxm(double *m1, double *m2, double *re){
 	int i__1, i__2, i__3, i__4, i__5, i__6, i__7;
 	int i__, j;
 	double prodm[9];
-	for (i__ = 1; i__ <= 3; ++i__) { //ĞĞ
-		for (j = 1; j <= 3; ++j) { //ÁĞ
+	for (i__ = 1; i__ <= 3; ++i__) { //è¡Œ
+		for (j = 1; j <= 3; ++j) { //åˆ—
 			re[(i__1 = j + i__ * 3 - 4) ] = m1[(i__2 = i__ * 3 - 3)] * m2[(i__3 = j - 1)]
 			                              + m1[(i__4 = i__ * 3 - 2)] * m2[(i__5 = j + 2)] 
 			                              + m1[(i__6 = i__ * 3 - 1)] * m2[(i__7 = j + 5)];

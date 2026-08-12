@@ -1,0 +1,361 @@
+{
+  "input_path": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0",
+  "pattern": "*_intra_match.txt",
+  "filter_outliers": true,
+  "mad_k": 3.5,
+  "file_count": 8,
+  "files": [
+    {
+      "file": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0/ESP_075625_2055_RED0_1_intra_match.txt",
+      "total_nonempty_lines": 1905,
+      "malformed_lines": 0,
+      "matched_success_count": 1905,
+      "used_point_count": 1331,
+      "outlier_removed_count": 574,
+      "filter_enabled": true,
+      "matched_success_ratio": 1.0,
+      "dr_stats": {
+        "count": 1331,
+        "mean": -6.1470682456800105,
+        "std": 0.4964175448039531,
+        "min": -7.9121090000007825,
+        "max": -4.2402340000007825
+      },
+      "dc_stats": {
+        "count": 1331,
+        "mean": -1998.6502991765574,
+        "std": 0.6543580001141218,
+        "min": -2001.191008,
+        "max": -1996.086716
+      },
+      "by_img_id": {
+        "1": {
+          "count": 1331,
+          "dr_stats": {
+            "count": 1331,
+            "mean": -6.1470682456800105,
+            "std": 0.4964175448039531,
+            "min": -7.9121090000007825,
+            "max": -4.2402340000007825
+          },
+          "dc_stats": {
+            "count": 1331,
+            "mean": -1998.6502991765574,
+            "std": 0.6543580001141218,
+            "min": -2001.191008,
+            "max": -1996.086716
+          }
+        }
+      },
+      "plot_path": "/home/wbl/code/MARS/Mars_new/script/dr_dc_plots/ESP_075625_2055_RED0_1_intra_match_row_dr_dc.png"
+    },
+    {
+      "file": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0/ESP_075625_2055_RED1_2_intra_match.txt",
+      "total_nonempty_lines": 2446,
+      "malformed_lines": 0,
+      "matched_success_count": 2446,
+      "used_point_count": 2172,
+      "outlier_removed_count": 274,
+      "filter_enabled": true,
+      "matched_success_ratio": 1.0,
+      "dr_stats": {
+        "count": 2172,
+        "mean": -8.8257139894107,
+        "std": 0.4869794648968942,
+        "min": -10.673828000000867,
+        "max": -7.140625
+      },
+      "dc_stats": {
+        "count": 2172,
+        "mean": -1997.161970293737,
+        "std": 0.3809781236537434,
+        "min": -1998.317738,
+        "max": -1995.9445
+      },
+      "by_img_id": {
+        "2": {
+          "count": 2172,
+          "dr_stats": {
+            "count": 2172,
+            "mean": -8.8257139894107,
+            "std": 0.4869794648968942,
+            "min": -10.673828000000867,
+            "max": -7.140625
+          },
+          "dc_stats": {
+            "count": 2172,
+            "mean": -1997.161970293737,
+            "std": 0.3809781236537434,
+            "min": -1998.317738,
+            "max": -1995.9445
+          }
+        }
+      },
+      "plot_path": "/home/wbl/code/MARS/Mars_new/script/dr_dc_plots/ESP_075625_2055_RED1_2_intra_match_row_dr_dc.png"
+    },
+    {
+      "file": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0/ESP_075625_2055_RED2_3_intra_match.txt",
+      "total_nonempty_lines": 2033,
+      "malformed_lines": 0,
+      "matched_success_count": 2033,
+      "used_point_count": 1358,
+      "outlier_removed_count": 675,
+      "filter_enabled": true,
+      "matched_success_ratio": 1.0,
+      "dr_stats": {
+        "count": 1358,
+        "mean": -1.22199044108982,
+        "std": 0.5906622084268087,
+        "min": -3.1875,
+        "max": 1.0351559999999154
+      },
+      "dc_stats": {
+        "count": 1358,
+        "mean": -1999.8519554256272,
+        "std": 0.7024238729856235,
+        "min": -2002.932749,
+        "max": -1996.427959
+      },
+      "by_img_id": {
+        "3": {
+          "count": 1358,
+          "dr_stats": {
+            "count": 1358,
+            "mean": -1.22199044108982,
+            "std": 0.5906622084268087,
+            "min": -3.1875,
+            "max": 1.0351559999999154
+          },
+          "dc_stats": {
+            "count": 1358,
+            "mean": -1999.8519554256272,
+            "std": 0.7024238729856235,
+            "min": -2002.932749,
+            "max": -1996.427959
+          }
+        }
+      },
+      "plot_path": "/home/wbl/code/MARS/Mars_new/script/dr_dc_plots/ESP_075625_2055_RED2_3_intra_match_row_dr_dc.png"
+    },
+    {
+      "file": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0/ESP_075625_2055_RED3_4_intra_match.txt",
+      "total_nonempty_lines": 2723,
+      "malformed_lines": 0,
+      "matched_success_count": 2723,
+      "used_point_count": 2473,
+      "outlier_removed_count": 250,
+      "filter_enabled": true,
+      "matched_success_ratio": 1.0,
+      "dr_stats": {
+        "count": 2473,
+        "mean": -3.1102661209058073,
+        "std": 0.47713154136895414,
+        "min": -4.7246090000007825,
+        "max": -1.3828120000034687
+      },
+      "dc_stats": {
+        "count": 2473,
+        "mean": -2003.3460448516034,
+        "std": 0.42680654001635543,
+        "min": -2004.770222,
+        "max": -2001.860126
+      },
+      "by_img_id": {
+        "4": {
+          "count": 2473,
+          "dr_stats": {
+            "count": 2473,
+            "mean": -3.1102661209058073,
+            "std": 0.47713154136895414,
+            "min": -4.7246090000007825,
+            "max": -1.3828120000034687
+          },
+          "dc_stats": {
+            "count": 2473,
+            "mean": -2003.3460448516034,
+            "std": 0.42680654001635543,
+            "min": -2004.770222,
+            "max": -2001.860126
+          }
+        }
+      },
+      "plot_path": "/home/wbl/code/MARS/Mars_new/script/dr_dc_plots/ESP_075625_2055_RED3_4_intra_match_row_dr_dc.png"
+    },
+    {
+      "file": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0/ESP_075625_2055_RED4_5_intra_match.txt",
+      "total_nonempty_lines": 2165,
+      "malformed_lines": 0,
+      "matched_success_count": 2165,
+      "used_point_count": 1773,
+      "outlier_removed_count": 392,
+      "filter_enabled": true,
+      "matched_success_ratio": 1.0,
+      "dr_stats": {
+        "count": 1773,
+        "mean": 1.371617459108884,
+        "std": 0.5547288014250293,
+        "min": -0.8457029999990482,
+        "max": 3.4375
+      },
+      "dc_stats": {
+        "count": 1773,
+        "mean": -2001.158662632829,
+        "std": 0.4515793768101866,
+        "min": -2002.710871,
+        "max": -1999.578615
+      },
+      "by_img_id": {
+        "5": {
+          "count": 1773,
+          "dr_stats": {
+            "count": 1773,
+            "mean": 1.371617459108884,
+            "std": 0.5547288014250293,
+            "min": -0.8457029999990482,
+            "max": 3.4375
+          },
+          "dc_stats": {
+            "count": 1773,
+            "mean": -2001.158662632829,
+            "std": 0.4515793768101866,
+            "min": -2002.710871,
+            "max": -1999.578615
+          }
+        }
+      },
+      "plot_path": "/home/wbl/code/MARS/Mars_new/script/dr_dc_plots/ESP_075625_2055_RED4_5_intra_match_row_dr_dc.png"
+    },
+    {
+      "file": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0/ESP_075625_2055_RED5_6_intra_match.txt",
+      "total_nonempty_lines": 2373,
+      "malformed_lines": 0,
+      "matched_success_count": 2373,
+      "used_point_count": 2149,
+      "outlier_removed_count": 224,
+      "filter_enabled": true,
+      "matched_success_ratio": 1.0,
+      "dr_stats": {
+        "count": 2149,
+        "mean": -0.12812922475569316,
+        "std": 0.48037791693512605,
+        "min": -1.7734379999965313,
+        "max": 1.4921880000001693
+      },
+      "dc_stats": {
+        "count": 2149,
+        "mean": -1998.4590647315035,
+        "std": 0.4835262459975069,
+        "min": -2000.202227,
+        "max": -1996.711714
+      },
+      "by_img_id": {
+        "6": {
+          "count": 2149,
+          "dr_stats": {
+            "count": 2149,
+            "mean": -0.12812922475569316,
+            "std": 0.48037791693512605,
+            "min": -1.7734379999965313,
+            "max": 1.4921880000001693
+          },
+          "dc_stats": {
+            "count": 2149,
+            "mean": -1998.4590647315035,
+            "std": 0.4835262459975069,
+            "min": -2000.202227,
+            "max": -1996.711714
+          }
+        }
+      },
+      "plot_path": "/home/wbl/code/MARS/Mars_new/script/dr_dc_plots/ESP_075625_2055_RED5_6_intra_match_row_dr_dc.png"
+    },
+    {
+      "file": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0/ESP_075625_2055_RED6_7_intra_match.txt",
+      "total_nonempty_lines": 2515,
+      "malformed_lines": 0,
+      "matched_success_count": 2515,
+      "used_point_count": 2235,
+      "outlier_removed_count": 280,
+      "filter_enabled": true,
+      "matched_success_ratio": 1.0,
+      "dr_stats": {
+        "count": 2235,
+        "mean": 6.150773924832173,
+        "std": 0.5005701837181636,
+        "min": 4.191405999998096,
+        "max": 7.876952999999048
+      },
+      "dc_stats": {
+        "count": 2235,
+        "mean": -2003.2182460626411,
+        "std": 0.3979887396113421,
+        "min": -2004.472836,
+        "max": -2001.884066
+      },
+      "by_img_id": {
+        "7": {
+          "count": 2235,
+          "dr_stats": {
+            "count": 2235,
+            "mean": 6.150773924832173,
+            "std": 0.5005701837181636,
+            "min": 4.191405999998096,
+            "max": 7.876952999999048
+          },
+          "dc_stats": {
+            "count": 2235,
+            "mean": -2003.2182460626411,
+            "std": 0.3979887396113421,
+            "min": -2004.472836,
+            "max": -2001.884066
+          }
+        }
+      },
+      "plot_path": "/home/wbl/code/MARS/Mars_new/script/dr_dc_plots/ESP_075625_2055_RED6_7_intra_match_row_dr_dc.png"
+    },
+    {
+      "file": "/media/wbl/Elements/paper_experiments/Mars/new/ESP_075625_2055/downsample/0/ESP_075625_2055_RED7_8_intra_match.txt",
+      "total_nonempty_lines": 2789,
+      "malformed_lines": 0,
+      "matched_success_count": 2789,
+      "used_point_count": 2485,
+      "outlier_removed_count": 304,
+      "filter_enabled": true,
+      "matched_success_ratio": 1.0,
+      "dr_stats": {
+        "count": 2485,
+        "mean": 3.581725408048332,
+        "std": 0.4747265738875682,
+        "min": 1.8457030000008672,
+        "max": 5.2910159999992175
+      },
+      "dc_stats": {
+        "count": 2485,
+        "mean": -1996.7226997448686,
+        "std": 0.38512234240057946,
+        "min": -1998.070358,
+        "max": -1995.394907
+      },
+      "by_img_id": {
+        "8": {
+          "count": 2485,
+          "dr_stats": {
+            "count": 2485,
+            "mean": 3.581725408048332,
+            "std": 0.4747265738875682,
+            "min": 1.8457030000008672,
+            "max": 5.2910159999992175
+          },
+          "dc_stats": {
+            "count": 2485,
+            "mean": -1996.7226997448686,
+            "std": 0.38512234240057946,
+            "min": -1998.070358,
+            "max": -1995.394907
+          }
+        }
+      },
+      "plot_path": "/home/wbl/code/MARS/Mars_new/script/dr_dc_plots/ESP_075625_2055_RED7_8_intra_match_row_dr_dc.png"
+    }
+  ]
+}
